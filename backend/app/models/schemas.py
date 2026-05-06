@@ -1,5 +1,21 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from enum import Enum
+
+class ExamMode(str, Enum):
+    SURVIVAL = "survival"
+    BALANCED = "balanced"
+    FULL = "full"
+
+class Priority(str, Enum):
+    MUST = "must"
+    SHOULD = "should"
+    OPTIONAL = "optional"
+
+class Difficulty(str, Enum):
+    EASY = "easy"
+    MEDIUM = "medium"
+    HARD = "hard"
 
 class GeneratePlanRequest(BaseModel):
     subject: str
@@ -10,12 +26,13 @@ class GeneratePlanRequest(BaseModel):
 class Question(BaseModel):
     question: str
     type: str  # MCQ | coding | theory
-    difficulty: str  # easy | medium | hard
+    difficulty: Difficulty
     probability: float
-    priority: str  # must | should | optional
+    priority: Priority
     solution: str
 
 class GeneratePlanResponse(BaseModel):
-    mode: str
+    mode: ExamMode
+    focusTopics: Optional[List[str]] = None
     strategy: str
     questions: List[Question]
