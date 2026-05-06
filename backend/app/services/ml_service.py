@@ -1,15 +1,22 @@
 """
-ML Service — TF-IDF based Topic Importance Scoring
+ML Service — TF-IDF based Topic Importance Scoring + Naive Bayes Question Type Prediction
 
 Uses scikit-learn's TfidfVectorizer to analyze past question papers
 or syllabus text and compute data-driven topic weights.
 
-This replaces hardcoded topic ordering with actual frequency analysis.
+Uses Naive Bayes (MultinomialNB) to predict whether a topic will
+likely appear as MCQ, Coding, or Theory based on keyword patterns.
 """
 
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
 import numpy as np
 
+
+# ─────────────────────────────────────────────
+# 1. TF-IDF Topic Importance Scoring
+# ─────────────────────────────────────────────
 
 def compute_topic_weights_tfidf(topics: list, pdf_text: str) -> dict:
     """
@@ -85,3 +92,106 @@ def merge_weights(rule_weights: dict, ml_weights: dict, ml_ratio: float = 0.5) -
         merged[topic] = round((rule_w * rule_ratio) + (ml_w * ml_ratio), 3)
 
     return merged
+
+
+# ─────────────────────────────────────────────
+# 2. Naive Bayes Question Type Predictor
+# ─────────────────────────────────────────────
+
+# Training data: keyword patterns mapped to question types
+TRAINING_DATA = [
+    # Theory patterns
+    ("define explain describe discuss elaborate concept meaning overview introduction", "theory"),
+    ("what is difference between compare contrast advantages disadvantages", "theory"),
+    ("principles characteristics features properties types classification", "theory"),
+    ("architecture diagram flow lifecycle phases stages", "theory"),
+    ("list enumerate state mention name identify", "theory"),
+    ("role importance significance purpose need why", "theory"),
+    ("theory fundamentals basics concepts overview summary", "theory"),
+    ("advantages limitations drawbacks benefits merits demerits", "theory"),
+
+    # Coding patterns
+    ("implement write code program function algorithm", "coding"),
+    ("output debug trace dry run execute compile", "coding"),
+    ("class object method constructor inheritance polymorphism", "coding"),
+    ("array linked list stack queue tree graph sort search", "coding"),
+    ("syntax example snippet logic pseudocode flowchart", "coding"),
+    ("design pattern implementation observer strategy factory singleton", "coding"),
+    ("write a program to implement develop create build", "coding"),
+    ("data structure algorithm complexity time space", "coding"),
+
+    # MCQ patterns
+    ("which of the following select correct option choose", "MCQ"),
+    ("true false assertion reason statement", "MCQ"),
+    ("fill in the blank match the following", "MCQ"),
+    ("abbreviation full form stands for acronym", "MCQ"),
+    ("short answer one word quick recall fact", "MCQ"),
+    ("identify select pick correct incorrect right wrong", "MCQ"),
+]
+
+# Build the classifier once at module load
+_question_type_model = None
+
+
+def _get_question_type_model():
+    """Lazily builds and caches the Naive Bayes classifier."""
+    global _question_type_model
+    if _question_type_model is not None:
+        return _question_type_model
+
+    texts = [item[0] for item in TRAINING_DATA]
+    labels = [item[1] for item in TRAINING_DATA]
+
+    _question_type_model = Pipeline([
+        ("tfidf", TfidfVectorizer(stop_words="english", lowercase=True)),
+        ("clf", MultinomialNB(alpha=1.0))
+    ])
+    _question_type_model.fit(texts, labels)
+    return _question_type_model
+
+
+def predict_question_type(topic: str) -> dict:
+    """
+    Predicts whether a topic will likely appear as MCQ, Coding, or Theory.
+
+    Args:
+        topic: A single topic string (e.g., "Observer Pattern")
+
+    Returns:
+        dict: {
+            "predicted_type": "theory" | "coding" | "MCQ",
+            "confidence": {
+                "theory": 0.65,
+                "coding": 0.25,
+                "MCQ": 0.10
+            }
+        }
+    """
+    model = _get_question_type_model()
+    predicted = model.predict([topic])[0]
+    probabilities = model.predict_proba([topic])[0]
+    classes = model.classes_
+
+    confidence = {cls: round(float(prob), 3) for cls, prob in zip(classes, probabilities)}
+
+    return {
+        "predicted_type": predicted,
+        "confidence": confidence
+    }
+
+
+def predict_question_types_batch(topics: list) -> dict:
+    """
+    Predicts question types for a list of topics.
+
+    Args:
+        topics: List of topic strings
+
+    Returns:
+        dict: {topic: {"predicted_type": "...", "confidence": {...}}}
+    """
+    if not topics:
+        return {}
+
+    return {topic: predict_question_type(topic) for topic in topics}
+

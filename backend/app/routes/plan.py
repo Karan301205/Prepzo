@@ -1,8 +1,8 @@
 from fastapi import APIRouter
-from app.models.schemas import GeneratePlanRequest, GeneratePlanResponse, Question
+from app.models.schemas import GeneratePlanRequest, GeneratePlanResponse, Question, TopicInsight
 from app.services.deadline_service import calculate_deadline_mode, assign_topic_weights, build_strategy
 from app.services.groq_service import generate_questions, parse_questions_from_response
-from app.services.ml_service import compute_topic_weights_tfidf, merge_weights
+from app.services.ml_service import compute_topic_weights_tfidf, merge_weights, predict_question_types_batch
 from app.utils.store import record_plan, record_event
 
 router = APIRouter()
@@ -21,6 +21,12 @@ async def generate_plan(request: GeneratePlanRequest):
         weights = merge_weights(rule_weights, ml_weights, ml_ratio=0.5)
     else:
         weights = rule_weights
+    
+    # Predict question types using Naive Bayes classifier
+    raw_insights = predict_question_types_batch(request.topics)
+    topic_insights = {
+        topic: TopicInsight(**data) for topic, data in raw_insights.items()
+    }
     
     # Generate questions from Groq LLM
     raw_questions = generate_questions(
@@ -51,5 +57,7 @@ async def generate_plan(request: GeneratePlanRequest):
         mode=mode,
         focusTopics=[t for t, w in weights.items() if w >= 0.4],
         strategy=build_strategy(mode),
-        questions=questions
+        questions=questions,
+        topicInsights=topic_insights
     )
+

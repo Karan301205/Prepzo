@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 from enum import Enum
 
 class ExamMode(str, Enum):
@@ -31,8 +31,14 @@ class Question(BaseModel):
     priority: Priority
     solution: str
 
+class TopicInsight(BaseModel):
+    predicted_type: str  # MCQ | coding | theory
+    confidence: Dict[str, float]
+
 class GeneratePlanResponse(BaseModel):
     mode: ExamMode
     focusTopics: Optional[List[str]] = None
     strategy: str
     questions: List[Question]
+    topicInsights: Optional[Dict[str, TopicInsight]] = None
+
