@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import plan
+from app.routes import plan, upload
 
 app = FastAPI(
     title="Prepzo API",
@@ -8,6 +8,7 @@ app = FastAPI(
 )
 
 app.include_router(plan.router, prefix="/api")
+app.include_router(upload.router, prefix="/api")
 
 @app.get("/")
 def read_root():
