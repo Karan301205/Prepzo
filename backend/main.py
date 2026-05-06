@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import plan, upload, chat, analytics
+from app.routes import plan, upload, chat, analytics, auth
 
 app = FastAPI(
     title="Prepzo API",
@@ -11,6 +11,7 @@ app.include_router(plan.router, prefix="/api")
 app.include_router(upload.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
 
 @app.get("/")
 def read_root():

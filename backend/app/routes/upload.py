@@ -5,7 +5,7 @@ from app.utils.pdf_parser import extract_text_from_pdf, extract_topics_from_text
 
 router = APIRouter()
 
-@router.post("/upload-syllabus")
+@router.post("/upload-pdf")
 async def analyze_input(file: UploadFile = File(...)):
     """
     Endpoint to upload a PDF (syllabus/notes) and extract text.
