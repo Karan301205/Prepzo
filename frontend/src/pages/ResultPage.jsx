@@ -24,31 +24,24 @@ export default function ResultPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [planData, setPlanData] = useState(() => {
-    if (location.state?.plan) {
-      return {
-        plan: location.state.plan,
-        subject: location.state.subject,
-        examDate: location.state.examDate,
-      };
+  const getStoredData = () => {
+    try {
+      return JSON.parse(localStorage.getItem('prepzo_last_result') || '{}');
+    } catch {
+      return {};
     }
-    const cached = localStorage.getItem('prepzo_last_result');
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (parsed.plan) {
-          return parsed;
-        }
-      } catch (e) {
-        // ignore JSON parse error
-      }
-    }
-    return null;
-  });
+  };
+
+  const rawState = location.state;
+  const stored = getStoredData();
+
+  const plan = rawState?.plan || stored?.plan || null;
+  const subject = rawState?.subject || stored?.subject || '';
+  const examDate = rawState?.examDate || stored?.examDate || '';
 
   useEffect(() => {
-    if (!planData) navigate('/input', { replace: true });
-  }, [planData, navigate]);
+    if (!plan) navigate('/input', { replace: true });
+  }, []);
 
   const [filters, setFilters] = useState({
     priority: [],
@@ -57,18 +50,17 @@ export default function ResultPage() {
   });
 
   const filteredQuestions = useMemo(() => {
-    if (!planData?.plan?.questions) return [];
-    return planData.plan.questions.filter((q) => {
+    if (!plan?.questions) return [];
+    return plan.questions.filter((q) => {
       const pMatch = filters.priority.length === 0 || filters.priority.includes(q.priority);
       const dMatch = filters.difficulty.length === 0 || filters.difficulty.includes(q.difficulty);
       const tMatch = filters.type.length === 0 || filters.type.includes(q.type);
       return pMatch && dMatch && tMatch;
     });
-  }, [planData, filters]);
+  }, [plan, filters]);
 
-  if (!planData) return null;
+  if (!plan) return null;
 
-  const { plan, subject, examDate } = planData;
   const modeColor = plan.mode === 'survival' ? '#E8341C' : plan.mode === 'balanced' ? '#D4910A' : '#0D9E6E';
 
   const handleOpenChat = () => {

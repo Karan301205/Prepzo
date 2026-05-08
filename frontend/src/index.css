@@ -120,3 +120,24 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background: rgba(108, 99, 255, 0.2);
   color: #0A0A0F;
 }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.spinner-dark {
+  border-color: rgba(108, 99, 255, 0.2);
+  border-top-color: #6C63FF;
+}

@@ -23,24 +23,31 @@ export default function ChatPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const planData = location.state || (() => {
+  const getStoredData = () => {
     try {
-      const cached = JSON.parse(localStorage.getItem('prepzo_last_result') || '{}');
-      return cached.plan ? cached : {};
+      return JSON.parse(localStorage.getItem('prepzo_last_result') || '{}');
     } catch {
       return {};
     }
-  })();
-  const { plan, subject, examDate } = planData;
+  };
+
+  const rawState = location.state;
+  const stored = getStoredData();
+
+  const plan = rawState?.plan || stored?.plan || null;
+  const subject = rawState?.subject || stored?.subject || '';
+  const examDate = rawState?.examDate || stored?.examDate || '';
 
   useEffect(() => {
-    if (!plan || !subject) navigate('/input', { replace: true });
-  }, [plan, subject, navigate]);
+    if (!plan) navigate('/input', { replace: true });
+  }, []); // only on mount — don't re-run on every render
 
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: `Hey! I'm Prepzo, your AI study assistant. I have your ${plan?.mode || ''} plan loaded. Ask me anything about your topics, questions, or study strategy!`,
+      content: plan
+        ? `Hey! I'm Prepzo, your AI study assistant. I have your ${plan.mode} plan loaded. Ask me anything about your topics, questions, or study strategy!`
+        : `Hey! I'm Prepzo. Loading your plan...`,
     },
   ]);
   const [input, setInput] = useState('');
@@ -117,7 +124,7 @@ export default function ChatPage() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
           <button
-            onClick={() => navigate('/result')}
+            onClick={() => navigate('/result', { state: { plan, subject, examDate } })}
             style={{
               background: 'none',
               border: 'none',

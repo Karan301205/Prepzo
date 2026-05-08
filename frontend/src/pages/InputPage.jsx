@@ -43,6 +43,7 @@ export default function InputPage() {
   const fileInputRef = useRef(null);
 
   const [pdfText, setPdfText] = useState('');
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const daysRemaining = useMemo(() => calculateDaysRemaining(examDate), [examDate]);
 
@@ -85,19 +86,19 @@ export default function InputPage() {
     }
     setPdfName(file.name);
     setError('');
-    setLoading(true);
+    setPdfLoading(true);
 
     try {
       const response = await uploadPdf(file);
-      setPdfText(response.data.text);
-      if (response.data.topics && response.data.topics.length > 0) {
-        setTopics((prev) => [...new Set([...prev, ...response.data.topics])]);
+      setPdfText(response.data.extracted_text_preview || '');
+      if (response.data.detectedTopics && response.data.detectedTopics.length > 0) {
+        setTopics((prev) => [...new Set([...prev, ...response.data.detectedTopics])]);
       }
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to process PDF.');
       setPdfName(null);
     } finally {
-      setLoading(false);
+      setPdfLoading(false);
     }
   };
 
@@ -420,7 +421,14 @@ export default function InputPage() {
               style={{ display: 'none' }}
               onChange={handleFileChange}
             />
-            {pdfName ? (
+            {pdfLoading ? (
+              <div style={{ textAlign: 'center' }}>
+                <div className="spinner-dark" style={{ margin: '0 auto 12px' }} />
+                <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#6B6B80' }}>
+                  Processing PDF...
+                </p>
+              </div>
+            ) : pdfName ? (
               <div style={{ textAlign: 'center' }}>
                 <span style={{ fontSize: 24, marginBottom: 8, display: 'block' }}>✅</span>
                 <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#0D9E6E', fontWeight: 500 }}>
