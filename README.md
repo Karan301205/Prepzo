@@ -34,7 +34,7 @@ Prepzo is a **Deadline-Aware Exam Preparation Engine** powered by 5 machine lear
 | Layer | Technology |
 |---|---|
 | Backend | FastAPI (Python) |
-| AI / LLM | Groq API — LLaMA-3 70B (`llama3-70b-8192`) |
+| AI / LLM | Groq API — LLaMA-3.3 70B (`llama-3.3-70b-versatile`) |
 | ML Models | scikit-learn — TF-IDF, Naive Bayes, K-Means, Cosine Similarity |
 | Scheduling | SM-2 Spaced Repetition Algorithm |
 | PDF Parsing | pdfplumber |

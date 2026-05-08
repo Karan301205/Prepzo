@@ -63,7 +63,7 @@ MODE_CONFIG = {
         "prob_floor": 0.52,
         # Full-mode worst case: 25 questions × ~950 chars (question + long solution + fields)
         # ≈ 23750 chars / 4 ≈ 5937 tokens. 6500 leaves a safe margin within the
-        # llama3-70b-8192 total context window (8192 − ~1300 prompt ≈ 6892 available).
+        # llama-3.3-70b-versatile total context window (8192 − ~1300 prompt ≈ 6892 available).
         "max_tokens": 6500,
     },
 }
@@ -603,7 +603,7 @@ def _call_groq_questions(prompt: str, valid_topics: list, max_tokens: int = 4096
     t0 = time.time()
     try:
         completion = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {
                     "role": "system",
@@ -894,7 +894,7 @@ def chat_with_groq(
     t0 = time.time()
     try:
         completion = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             messages=full_messages,
             temperature=0.5,
             max_tokens=1024,
