@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import InputPage from './pages/InputPage';
 import ResultPage from './pages/ResultPage';
 import ChatPage from './pages/ChatPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -15,6 +16,7 @@ function AnimatedRoutes() {
         <Route path="/input" element={<InputPage />} />
         <Route path="/result" element={<ResultPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="*" element={<Navigate to="/input" replace />} />
       </Routes>
     </AnimatePresence>

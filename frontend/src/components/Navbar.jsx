@@ -1,7 +1,5 @@
 import { useLocation, Link } from 'react-router-dom';
 
-
-
 export default function Navbar() {
   const location = useLocation();
 
@@ -9,6 +7,7 @@ export default function Navbar() {
     { path: '/input', label: 'Input' },
     { path: '/result', label: 'Result' },
     { path: '/chat', label: 'Chat' },
+    { path: '/analytics', label: 'Analytics' },
   ];
 
   return (

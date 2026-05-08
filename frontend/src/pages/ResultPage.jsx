@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import ModeBanner from '../components/ModeBanner';
 import FilterBar from '../components/FilterBar';
 import QuestionCard from '../components/QuestionCard';
+import TopicInsightsPanel from '../components/TopicInsightsPanel';
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -17,6 +18,60 @@ function ArrowRightIcon({ size = 16, color = '#6C63FF' }) {
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M3.33 8H12.67M12.67 8L8.67 4M12.67 8L8.67 12" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+function QuestionStats({ questions }) {
+  if (!questions || questions.length === 0) return null;
+
+  const must = questions.filter(q => q.priority === 'must').length;
+  const should = questions.filter(q => q.priority === 'should').length;
+  const optional = questions.filter(q => q.priority === 'optional').length;
+  const avgProb = questions.reduce((sum, q) => sum + (q.probability || 0), 0) / questions.length;
+
+  const stats = [
+    { label: 'Must Do', value: must, color: '#E8341C', icon: '🔴' },
+    { label: 'Should Do', value: should, color: '#D4910A', icon: '🟡' },
+    { label: 'Optional', value: optional, color: '#6B6B80', icon: '⚪' },
+    { label: 'Avg Probability', value: `${Math.round(avgProb * 100)}%`, color: '#6C63FF', icon: '📊' },
+  ];
+
+  return (
+    <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
+      {stats.map((s, i) => (
+        <motion.div
+          key={s.label}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: i * 0.08 }}
+          style={{
+            flex: '1 1 140px',
+            background: '#FFFFFF',
+            border: '1.5px solid #E0E0E8',
+            borderRadius: 12,
+            padding: '14px 18px',
+            textAlign: 'center',
+          }}
+        >
+          <span style={{ fontSize: 16, display: 'block', marginBottom: 4 }}>{s.icon}</span>
+          <span
+            style={{
+              fontFamily: "'Sora', sans-serif",
+              fontWeight: 700,
+              fontSize: 24,
+              color: s.color,
+              display: 'block',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            {s.value}
+          </span>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: '#6B6B80', letterSpacing: '0.06em' }}>
+            {s.label}
+          </span>
+        </motion.div>
+      ))}
+    </div>
   );
 }
 
@@ -117,13 +172,14 @@ export default function ResultPage() {
 
         <ModeBanner mode={plan.mode} />
 
+        {/* Strategy + Focus Topics */}
         <div
           style={{
             background: '#FFFFFF',
             border: '1.5px solid #E0E0E8',
             borderRadius: 16,
             padding: '24px 28px',
-            marginBottom: 40,
+            marginBottom: 32,
           }}
         >
           <div style={{ marginBottom: 24 }}>
@@ -189,6 +245,13 @@ export default function ResultPage() {
           </div>
         </div>
 
+        {/* Question Stats */}
+        <QuestionStats questions={plan.questions} />
+
+        {/* Topic Insights from ML */}
+        <TopicInsightsPanel topicInsights={plan.topicInsights} />
+
+        {/* Filters */}
         <FilterBar filters={filters} setFilters={setFilters} />
 
         <div
@@ -215,6 +278,7 @@ export default function ResultPage() {
           )}
         </div>
 
+        {/* Chat CTA */}
         <div
           style={{
             background: '#1A1626',

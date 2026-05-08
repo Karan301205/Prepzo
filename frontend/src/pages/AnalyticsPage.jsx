@@ -1,0 +1,291 @@
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import Navbar from '../components/Navbar';
+import api from '../services/api';
+
+const pageVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+function StatCard({ label, value, icon, color }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{
+        background: '#FFFFFF',
+        border: '1.5px solid #E0E0E8',
+        borderRadius: 16,
+        padding: '24px 28px',
+        flex: '1 1 200px',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = '#C8C4FF';
+        e.currentTarget.style.boxShadow = '0 4px 24px rgba(108,99,255,0.10)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = '#E0E0E8';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <span style={{ fontSize: 20 }}>{icon}</span>
+        <span
+          style={{
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 11,
+            color: '#6B6B80',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          {label}
+        </span>
+      </div>
+      <span
+        style={{
+          fontFamily: "'Sora', sans-serif",
+          fontWeight: 700,
+          fontSize: 32,
+          color: color || '#0A0A0F',
+          letterSpacing: '-0.03em',
+        }}
+      >
+        {value}
+      </span>
+    </motion.div>
+  );
+}
+
+function ModeBar({ mode, count, total, color }) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+        <span
+          style={{
+            fontFamily: "'Sora', sans-serif",
+            fontSize: 14,
+            fontWeight: 500,
+            color: '#0A0A0F',
+            textTransform: 'capitalize',
+          }}
+        >
+          {mode === 'survival' ? '🔥' : mode === 'balanced' ? '⚡' : '🎯'} {mode}
+        </span>
+        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: '#6B6B80' }}>
+          {count} ({pct}%)
+        </span>
+      </div>
+      <div style={{ background: '#F0F0F5', borderRadius: 4, height: 8, overflow: 'hidden' }}>
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          style={{ height: '100%', background: color, borderRadius: 4 }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default function AnalyticsPage() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const res = await api.get('/analytics');
+        setData(res.data);
+      } catch (err) {
+        setError('Failed to load analytics data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, []);
+
+  const totalModes = data
+    ? (data.modeBreakdown?.survival || 0) +
+      (data.modeBreakdown?.balanced || 0) +
+      (data.modeBreakdown?.full || 0)
+    : 0;
+
+  const topSubjectsList = data?.topSubjects
+    ? Object.entries(data.topSubjects).sort((a, b) => b[1] - a[1])
+    : [];
+
+  return (
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={{ duration: 0.4 }}
+      style={{ background: '#F5F5F5', minHeight: '100vh' }}
+    >
+      <Navbar />
+
+      <div
+        style={{
+          paddingTop: 100,
+          paddingBottom: 80,
+          maxWidth: 800,
+          margin: '0 auto',
+          paddingLeft: 24,
+          paddingRight: 24,
+        }}
+      >
+        <div style={{ marginBottom: 40 }}>
+          <h1
+            style={{
+              fontFamily: "'Sora', sans-serif",
+              fontWeight: 700,
+              fontSize: 40,
+              color: '#0A0A0F',
+              letterSpacing: '-0.03em',
+              marginBottom: 8,
+            }}
+          >
+            Platform Analytics
+          </h1>
+          <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: '#6B6B80' }}>
+            Real-time usage statistics for Prepzo.ai
+          </p>
+        </div>
+
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '60px 0' }}>
+            <div className="spinner-dark" style={{ width: 24, height: 24, margin: '0 auto 16px' }} />
+            <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#6B6B80' }}>
+              Loading analytics...
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div
+            style={{
+              background: '#FEF0EE',
+              border: '1px solid #E8341C',
+              borderRadius: 10,
+              padding: '12px 16px',
+              fontFamily: "'Sora', sans-serif",
+              fontSize: 14,
+              color: '#E8341C',
+              marginBottom: 24,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {data && !loading && (
+          <>
+            {/* Stat Cards */}
+            <div style={{ display: 'flex', gap: 16, marginBottom: 32, flexWrap: 'wrap' }}>
+              <StatCard label="Plans Generated" value={data.totalPlansGenerated || 0} icon="📋" color="#6C63FF" />
+              <StatCard label="Chat Messages" value={data.chat_msgs || 0} icon="💬" color="#0D9E6E" />
+              <StatCard label="Users" value={data.users_count || 0} icon="👥" color="#D4910A" />
+            </div>
+
+            {/* Mode Breakdown */}
+            <div
+              style={{
+                background: '#FFFFFF',
+                border: '1.5px solid #E0E0E8',
+                borderRadius: 16,
+                padding: '24px 28px',
+                marginBottom: 32,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 11,
+                  color: '#6B6B80',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  display: 'block',
+                  marginBottom: 20,
+                }}
+              >
+                Mode Breakdown
+              </span>
+              <ModeBar mode="survival" count={data.modeBreakdown?.survival || 0} total={totalModes} color="#E8341C" />
+              <ModeBar mode="balanced" count={data.modeBreakdown?.balanced || 0} total={totalModes} color="#D4910A" />
+              <ModeBar mode="full" count={data.modeBreakdown?.full || 0} total={totalModes} color="#0D9E6E" />
+            </div>
+
+            {/* Top Subjects */}
+            <div
+              style={{
+                background: '#FFFFFF',
+                border: '1.5px solid #E0E0E8',
+                borderRadius: 16,
+                padding: '24px 28px',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 11,
+                  color: '#6B6B80',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  display: 'block',
+                  marginBottom: 16,
+                }}
+              >
+                Top Subjects
+              </span>
+              {topSubjectsList.length === 0 ? (
+                <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#6B6B80' }}>
+                  No subjects tracked yet. Generate a plan to see data here.
+                </p>
+              ) : (
+                topSubjectsList.map(([subject, count], i) => (
+                  <motion.div
+                    key={subject}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 0',
+                      borderBottom: i < topSubjectsList.length - 1 ? '1px solid #F0F0F5' : 'none',
+                    }}
+                  >
+                    <span style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#0A0A0F' }}>
+                      {subject}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "'DM Mono', monospace",
+                        fontSize: 12,
+                        color: '#6C63FF',
+                        background: '#EEEDFF',
+                        padding: '2px 10px',
+                        borderRadius: 999,
+                      }}
+                    >
+                      {count} {count === 1 ? 'plan' : 'plans'}
+                    </span>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </motion.div>
+  );
+}

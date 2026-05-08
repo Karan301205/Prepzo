@@ -76,21 +76,35 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
 
-/* Spinner */
+/* Spinner (white — for dark backgrounds) */
 @keyframes spin {
+  from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 .spinner {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid #E0E0E8;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Spinner (dark — for light backgrounds) */
+.spinner-dark {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(108, 99, 255, 0.2);
   border-top-color: #6C63FF;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 
-/* Typing dots */
+/* Typing dots for chat */
 @keyframes bounce {
   0%, 60%, 100% { transform: translateY(0); }
   30% { transform: translateY(-6px); }
@@ -107,7 +121,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .typing-dot:nth-child(2) { animation: bounce 1.2s infinite 0.15s; }
 .typing-dot:nth-child(3) { animation: bounce 1.2s infinite 0.3s; }
 
-/* Pulse text */
+/* Pulse text animation */
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
@@ -116,28 +130,35 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   animation: pulse-glow 1.5s ease-in-out infinite;
 }
 
+/* Shimmer loading animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #F0EEFF 25%, #E0DDFF 50%, #F0EEFF 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Confidence bar fill animation */
+@keyframes fill-bar {
+  from { width: 0%; }
+}
+.animate-fill {
+  animation: fill-bar 0.8s ease-out forwards;
+}
+
 ::selection {
   background: rgba(108, 99, 255, 0.2);
   color: #0A0A0F;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* Stat card counter animation */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
-.spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  flex-shrink: 0;
-}
-
-.spinner-dark {
-  border-color: rgba(108, 99, 255, 0.2);
-  border-top-color: #6C63FF;
+.stat-number {
+  animation: count-up 0.5s ease-out forwards;
 }

@@ -4,49 +4,54 @@ import PriorityBadge from './PriorityBadge';
 
 function TypeBadge({ type }) {
   const configs = {
-    MCQ: { bg: '#EEF6FF', text: '#2563EB' },
-    Coding: { bg: '#F0FDF4', text: '#15803D' },
-    Theory: { bg: '#EEEDFF', text: '#4A44AA' },
+    MCQ: { bg: '#EEF6FF', text: '#2563EB', label: 'MCQ' },
+    coding: { bg: '#F0FDF4', text: '#15803D', label: 'Coding' },
+    theory: { bg: '#EEEDFF', text: '#4A44AA', label: 'Theory' },
   };
-  const config = configs[type] || configs.Theory;
+  const config = configs[type] || configs.theory;
   return (
     <span
       style={{
         display: 'inline-block',
         background: config.bg,
         color: config.text,
-        border: `1px solid ${config.bg}`, // just for size matching with PriorityBadge
+        border: `1px solid ${config.bg}`,
         borderRadius: 999,
         padding: '3px 10px',
         fontFamily: "'DM Mono', monospace",
         fontSize: 11,
       }}
     >
-      {type}
+      {config.label}
     </span>
   );
 }
 
 function DifficultyTag({ difficulty }) {
   const colors = {
-    Easy: '#0D9E6E',
-    Medium: '#D4910A',
-    Hard: '#E8341C',
+    easy: '#0D9E6E',
+    medium: '#D4910A',
+    hard: '#E8341C',
   };
   const icons = {
-    Easy: '🟢',
-    Medium: '🟠',
-    Hard: '🔴',
+    easy: '🟢',
+    medium: '🟠',
+    hard: '🔴',
+  };
+  const labels = {
+    easy: 'Easy',
+    medium: 'Medium',
+    hard: 'Hard',
   };
   return (
     <span
       style={{
         fontFamily: "'DM Mono', monospace",
         fontSize: 12,
-        color: colors[difficulty] || colors.Medium,
+        color: colors[difficulty] || colors.medium,
       }}
     >
-      {icons[difficulty] || '🟠'} {difficulty}
+      {icons[difficulty] || '🟠'} {labels[difficulty] || 'Medium'}
     </span>
   );
 }
@@ -76,11 +81,25 @@ export default function QuestionCard({ question, index }) {
         e.currentTarget.style.borderColor = '#E0E0E8';
       }}
     >
-      {/* Row 1: Badges */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      {/* Row 1: Badges + Topic */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <PriorityBadge priority={question.priority} />
         <TypeBadge type={question.type} />
         <DifficultyTag difficulty={question.difficulty} />
+        <span
+          style={{
+            marginLeft: 'auto',
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 11,
+            color: '#6B6B80',
+            background: '#F5F5F5',
+            padding: '3px 10px',
+            borderRadius: 999,
+            border: '1px solid #E0E0E8',
+          }}
+        >
+          📌 {question.topic}
+        </span>
       </div>
 
       {/* Row 2: Question text */}
