@@ -78,7 +78,7 @@ export default function ChatPage() {
         plan.focusTopics,
         plan.questions
       );
-      setMessages([...newMessages, { role: 'assistant', content: response.data.reply }]);
+      setMessages([...newMessages, { role: 'assistant', content: response.data.reply, isNew: true }]);
     } catch (err) {
       setMessages([
         ...newMessages,

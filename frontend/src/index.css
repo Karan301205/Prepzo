@@ -121,6 +121,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .typing-dot:nth-child(2) { animation: bounce 1.2s infinite 0.15s; }
 .typing-dot:nth-child(3) { animation: bounce 1.2s infinite 0.3s; }
 
+/* Typewriter cursor blink */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 /* Pulse text animation */
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.5; }
