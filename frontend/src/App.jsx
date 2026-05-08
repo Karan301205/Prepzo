@@ -5,6 +5,7 @@ import InputPage from './pages/InputPage';
 import ResultPage from './pages/ResultPage';
 import ChatPage from './pages/ChatPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import InsightsPage from './pages/InsightsPage';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -17,6 +18,7 @@ function AnimatedRoutes() {
         <Route path="/result" element={<ResultPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/insights" element={<InsightsPage />} />
         <Route path="*" element={<Navigate to="/input" replace />} />
       </Routes>
     </AnimatePresence>

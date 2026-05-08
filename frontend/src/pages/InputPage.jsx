@@ -1,11 +1,9 @@
-import { useState, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import FloatingOrbs from '../three/FloatingOrbs';
 import Navbar from '../components/Navbar';
 import TopicChip from '../components/TopicChip';
-import ClusteringPanel from '../components/ClusteringPanel';
-import PatternAnalysisPanel from '../components/PatternAnalysisPanel';
 import { generatePlan, uploadPdf } from '../services/api';
 
 const pageVariants = {
@@ -48,6 +46,27 @@ export default function InputPage() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [clustering, setClustering] = useState(null);
   const [patternAnalysis, setPatternAnalysis] = useState(null);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state) {
+      if (location.state.addedTopics) setTopics(location.state.addedTopics);
+      if (location.state.subject) setSubject(location.state.subject);
+      if (location.state.examDate) setExamDate(location.state.examDate);
+      if (location.state.clustering) setClustering(location.state.clustering);
+      if (location.state.patternAnalysis) setPatternAnalysis(location.state.patternAnalysis);
+      if (location.state.pdfName) setPdfName(location.state.pdfName);
+
+      // Auto-generate if directed from InsightsPage
+      if (location.state.autoGenerate) {
+        // Clear autoGenerate so it doesn't loop
+        window.history.replaceState({}, document.title);
+        // Small timeout to allow state to settle
+        setTimeout(() => document.getElementById('generateBtn')?.click(), 100);
+      }
+    }
+  }, [location.state]);
 
   const daysRemaining = useMemo(() => calculateDaysRemaining(examDate), [examDate]);
 
@@ -461,20 +480,58 @@ export default function InputPage() {
           </div>
         </div>
 
-        {/* ML Model 3: K-Means Topic Clustering */}
-        <ClusteringPanel
-          clustering={clustering}
-          onAddTopic={(topic) => {
-            if (!topics.includes(topic)) {
-              setTopics((prev) => [...prev, topic]);
-            }
-          }}
-        />
-
-        {/* ML Model 5: Cosine Similarity Pattern Analysis */}
-        <PatternAnalysisPanel analysis={patternAnalysis} />
+        {/* PDF Analysis Badge */}
+        {(clustering || patternAnalysis) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              background: '#FFFFFF',
+              border: '1.5px solid #E0E0E8',
+              borderRadius: 16,
+              padding: '16px 20px',
+              marginBottom: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 24 }}>🧠</span>
+              <div>
+                <span style={{ display: 'block', fontFamily: "'Sora', sans-serif", fontSize: 14, fontWeight: 600, color: '#0A0A0F', marginBottom: 2 }}>
+                  PDF Analysis Complete
+                </span>
+                <span style={{ display: 'block', fontFamily: "'DM Mono', monospace", fontSize: 12, color: '#6B6B80' }}>
+                  {clustering?.clusters?.length || 0} clusters, {patternAnalysis?.totalQuestionsAnalyzed || 0} patterns found
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/insights', { state: { clustering, patternAnalysis, topics, subject, examDate, pdfName } })}
+              style={{
+                background: '#EEEDFF',
+                color: '#6C63FF',
+                border: 'none',
+                borderRadius: 999,
+                padding: '8px 16px',
+                fontFamily: "'Sora', sans-serif",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) => (e.target.style.background = '#DFDDFF')}
+              onMouseLeave={(e) => (e.target.style.background = '#EEEDFF')}
+            >
+              View Full Analysis →
+            </button>
+          </motion.div>
+        )}
 
         <button
+          id="generateBtn"
           onClick={handleGeneratePlan}
           disabled={loading}
           style={{
