@@ -36,22 +36,5 @@ const orbPositions = [
 ];
 
 export default function FloatingOrbs() {
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 0,
-        pointerEvents: 'none',
-        opacity: 0.6,
-      }}
-    >
-      <Canvas camera={{ position: [0, 0, 6], fov: 50 }} gl={{ alpha: true }}>
-        <ambientLight intensity={1} />
-        {orbPositions.map((pos, i) => (
-          <Orb key={i} position={pos} index={i} />
-        ))}
-      </Canvas>
-    </div>
-  );
+  return null;
 }

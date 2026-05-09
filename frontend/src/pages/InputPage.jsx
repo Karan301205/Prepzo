@@ -7,7 +7,6 @@ import TopicChip from '../components/TopicChip';
 import SkeletonInsights from '../components/SkeletonInsights';
 import ErrorState from '../components/ErrorState';
 import { generatePlan, uploadPdf } from '../services/api';
-import { usePostHog } from '@posthog/react';
 import { track } from '../utils/analytics';
 import { useViewport } from '../hooks/useViewport';
 import { useUser } from '@clerk/react';
@@ -40,7 +39,6 @@ function calculateDaysRemaining(dateString) {
 }
 
 export default function InputPage() {
-  const posthog = usePostHog();
   const navigate = useNavigate();
   const { isMobile } = useViewport();
   const { user } = useUser();
