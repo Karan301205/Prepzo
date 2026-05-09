@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
+import SkeletonCard from '../components/SkeletonCard';
 import api from '../services/api';
+import { useViewport } from '../hooks/useViewport';
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -96,6 +98,7 @@ export default function AnalyticsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { isMobile } = useViewport();
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -147,7 +150,7 @@ export default function AnalyticsPage() {
             style={{
               fontFamily: "'Sora', sans-serif",
               fontWeight: 700,
-              fontSize: 40,
+              fontSize: isMobile ? 26 : 40,
               color: '#0A0A0F',
               letterSpacing: '-0.03em',
               marginBottom: 8,
@@ -161,11 +164,14 @@ export default function AnalyticsPage() {
         </div>
 
         {loading && (
-          <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <div className="spinner-dark" style={{ width: 24, height: 24, margin: '0 auto 16px' }} />
-            <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#6B6B80' }}>
-              Loading analytics...
-            </p>
+          <div>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 32, flexWrap: 'wrap' }}>
+              <SkeletonCard height={110} style={{ flex: '1 1 180px' }} />
+              <SkeletonCard height={110} style={{ flex: '1 1 180px' }} />
+              <SkeletonCard height={110} style={{ flex: '1 1 180px' }} />
+            </div>
+            <SkeletonCard height={160} style={{ marginBottom: 32 }} />
+            <SkeletonCard height={200} />
           </div>
         )}
 

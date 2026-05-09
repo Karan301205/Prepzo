@@ -11,6 +11,7 @@ import FilterBar from '../components/FilterBar';
 import QuestionCard from '../components/QuestionCard';
 import TopicInsightsPanel from '../components/TopicInsightsPanel';
 import StudySchedulePanel from '../components/StudySchedulePanel';
+import { useViewport } from '../hooks/useViewport';
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -84,6 +85,7 @@ export default function ResultPage() {
   const posthog = usePostHog();
   const location = useLocation();
   const navigate = useNavigate();
+  const { isMobile } = useViewport();
 
   const getStoredData = () => {
     try {
@@ -234,13 +236,13 @@ export default function ResultPage() {
           paddingRight: 24,
         }}
       >
-        <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
           <div>
             <h1
               style={{
                 fontFamily: "'Sora', sans-serif",
                 fontWeight: 600,
-                fontSize: 40,
+                fontSize: isMobile ? 26 : 40,
                 color: '#0A0A0F',
                 letterSpacing: '-0.03em',
                 marginBottom: 8,
