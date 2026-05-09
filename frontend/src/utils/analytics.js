@@ -1,25 +1,16 @@
+import posthog from 'posthog-js';
+
 export const track = {
-  pdfUploaded: (subject, sizeKb) => {
-    if (import.meta.env.DEV) console.log('[Analytics] pdf_uploaded', { subject, sizeKb });
-  },
-  planGenerated: (subject, mode, topicsCount) => {
-    if (import.meta.env.DEV) console.log('[Analytics] plan_generated', { subject, mode, topicsCount });
-  },
-  chatMessageSent: () => {
-    if (import.meta.env.DEV) console.log('[Analytics] chat_message_sent');
-  },
-  errorOccurred: (context, message) => {
-    if (import.meta.env.DEV) console.log('[Analytics] error', { context, message });
-  },
-  insightsViewed: (clustersCount, patternsFound) => {
-    if (import.meta.env.DEV) console.log('[Analytics] insights_viewed', { clustersCount, patternsFound });
-  },
-  chatbotMessageSent: (length) => {},
-  topicChipSelected: (topic) => {},
-  studyPlanGenerated: (subject, mode, topicsCount, questionsCount) => {},
-  modeSelected: (mode) => {},
-  chatbotOpened: () => {},
-  planDownloaded: () => {},
+  otpSent: (phoneLength) => posthog.capture('otp_sent', { phone_length: phoneLength }),
+  otpVerified: (success) => posthog.capture('otp_verified', { success }),
+  pdfUploaded: (subject, fileSizeKb) => posthog.capture('pdf_uploaded', { subject, file_size_kb: fileSizeKb }),
+  studyPlanGenerated: (subject, mode, topicCount, questionCount) => posthog.capture('study_plan_generated', { subject, mode, topic_count: topicCount, question_count: questionCount }),
+  chatbotOpened: () => posthog.capture('chatbot_opened'),
+  chatbotMessageSent: (messageLength) => posthog.capture('chatbot_message_sent', { message_length: messageLength }),
+  modeSelected: (selectedMode) => posthog.capture('mode_selected', { selected_mode: selectedMode }),
+  topicChipSelected: (topicName) => posthog.capture('topic_chip_selected', { topic_name: topicName }),
+  planDownloaded: () => posthog.capture('plan_downloaded'),
+  errorOccurred: (location, message) => posthog.capture('error_occurred', { location, message }),
 };
 
 export default track;

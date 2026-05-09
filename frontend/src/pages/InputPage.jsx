@@ -9,6 +9,7 @@ import { generatePlan, uploadPdf } from '../services/api';
 import { useViewport } from '../hooks/useViewport';
 import { useUser } from '@clerk/react';
 import { savePlan } from '../services/supabase';
+import { track } from '../utils/analytics';
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -82,6 +83,7 @@ export default function InputPage() {
     if (trimmed && !topics.includes(trimmed)) {
       setTopics([...topics, trimmed]);
       setCurrentTopic('');
+      track.topicChipSelected(trimmed);
     }
   };
 
@@ -135,10 +137,12 @@ export default function InputPage() {
       if (response.data.patternAnalysis) {
         setPatternAnalysis(response.data.patternAnalysis);
       }
+      track.pdfUploaded(subject, Math.round(file.size / 1024));
     } catch (err) {
       const msg = err.response?.data?.detail || 'Failed to process PDF.';
       setError(msg);
       setPdfName(null);
+      track.errorOccurred('pdf_upload', msg);
     } finally {
       setPdfLoading(false);
     }
@@ -167,10 +171,12 @@ export default function InputPage() {
       if (user?.id) {
         savePlan(user.id, subject, examDate, response.data).catch(console.error);
       }
+      track.studyPlanGenerated(subject, response.data.mode, topics.length, response.data.questions?.length || 0);
       navigate('/result', { state: { plan: response.data, subject, examDate } });
     } catch (err) {
       const msg = err.response?.data?.detail || 'Failed to generate plan. Please try again.';
       setError(msg);
+      track.errorOccurred('plan_generation', msg);
       setPlanRetry(() => handleGeneratePlan);
       setLoading(false);
     }
