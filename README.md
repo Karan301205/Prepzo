@@ -4,7 +4,7 @@
 
 Prepzo is a **Deadline-Aware Exam Preparation Engine** powered by 5 machine learning models and a large language model. It figures out how much time a student has, uses ML to prioritize what matters most, auto-discovers topics from uploaded PDFs, generates a scientifically-scheduled study plan, and produces high-probability exam questions — all personalized to the student's exact context.
 
----
+--
 
 ## Features & USP
 
