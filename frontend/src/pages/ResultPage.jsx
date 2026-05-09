@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { usePostHog } from '@posthog/react';
 import { motion } from 'framer-motion';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { track } from '../utils/analytics';
 import Navbar from '../components/Navbar';
 import ModeBanner from '../components/ModeBanner';
@@ -140,22 +142,64 @@ export default function ResultPage() {
   };
 
   const handleDownloadPlan = () => {
-    const payload = {
-      subject,
-      examDate,
-      mode: plan.mode,
-      strategy: plan.strategy,
-      focusTopics: plan.focusTopics,
-      questions: plan.questions,
-      generatedAt: new Date().toISOString(),
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `prepzo-plan-${subject.toLowerCase().replace(/\s+/g, '-')}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(22);
+    doc.text(`Prepzo Plan: ${subject}`, 14, 20);
+    
+    doc.setFontSize(12);
+    doc.text(`Mode: ${plan.mode ? plan.mode.toUpperCase() : 'UNKNOWN'} | Exam Date: ${examDate}`, 14, 30);
+    
+    // Strategy
+    doc.setFontSize(16);
+    doc.text('Strategy', 14, 45);
+    doc.setFontSize(11);
+    const splitStrategy = doc.splitTextToSize(plan.strategy || '', 180);
+    doc.text(splitStrategy, 14, 55);
+    
+    let currentY = 55 + (splitStrategy.length * 5) + 10;
+    
+    // Focus Topics
+    if (plan.focusTopics && plan.focusTopics.length > 0) {
+      doc.setFontSize(16);
+      doc.text('Focus Topics', 14, currentY);
+      currentY += 10;
+      doc.setFontSize(11);
+      const topicsText = plan.focusTopics.join(', ');
+      const splitTopics = doc.splitTextToSize(topicsText, 180);
+      doc.text(splitTopics, 14, currentY);
+      currentY += (splitTopics.length * 5) + 10;
+    }
+    
+    // Questions
+    if (plan.questions && plan.questions.length > 0) {
+      const tableData = plan.questions.map((q, index) => {
+        return [
+          index + 1,
+          q.topic || '-',
+          q.question || '',
+          q.solution || ''
+        ];
+      });
+      
+      autoTable(doc, {
+        startY: currentY,
+        head: [['#', 'Topic', 'Question', 'Solution']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [108, 99, 255] },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 70 },
+          3: { cellWidth: 70 }
+        },
+        styles: { fontSize: 9, overflow: 'linebreak' }
+      });
+    }
+    
+    doc.save(`prepzo-plan-${subject.toLowerCase().replace(/\s+/g, '-')}.pdf`);
     track.planDownloaded();
   };
 
@@ -218,7 +262,7 @@ export default function ResultPage() {
           </div>
           <button
             onClick={handleDownloadPlan}
-            title="Download plan as JSON"
+            title="Download plan as PDF"
             style={{
               flexShrink: 0,
               marginTop: 6,
@@ -245,7 +289,7 @@ export default function ResultPage() {
               e.currentTarget.style.color = '#6B6B80';
             }}
           >
-            ↓ Download
+            ↓ Download PDF
           </button>
         </div>
 
