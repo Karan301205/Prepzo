@@ -149,8 +149,8 @@ export default function FeedbackSection() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-              <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 140px', minWidth: 0 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>Name (Optional)</label>
                 <input
                   type="text"
@@ -160,7 +160,7 @@ export default function FeedbackSection() {
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', boxSizing: 'border-box', outline: 'none' }}
                 />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: '1 1 140px', minWidth: 0 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>Subject (Optional)</label>
                 <input
                   type="text"
@@ -221,10 +221,10 @@ export default function FeedbackSection() {
 
       {/* PART 2: REVIEWS DISPLAY */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-          <h2 style={{ margin: '0', fontSize: '24px', fontWeight: '600', color: '#111827' }}>Student Reviews</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <h2 style={{ margin: '0', fontSize: '22px', fontWeight: '600', color: '#111827' }}>Student Reviews</h2>
           {feedbacksData.totalReviews > 0 && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#fef3c7', padding: '6px 12px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', color: '#92400e' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#fef3c7', padding: '6px 12px', borderRadius: '999px', fontSize: '14px', fontWeight: '600', color: '#92400e', flexShrink: 0 }}>
               <span style={{ color: '#fbbf24', fontSize: '16px' }}>★</span> {feedbacksData.averageRating.toFixed(1)} ({feedbacksData.totalReviews})
             </div>
           )}

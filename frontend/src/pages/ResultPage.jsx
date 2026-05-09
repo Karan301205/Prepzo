@@ -51,11 +51,12 @@ function QuestionStats({ questions }) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: i * 0.08 }}
           style={{
-            flex: '1 1 140px',
+            flex: '1 1 120px',
+            minWidth: 0,
             background: '#FFFFFF',
             border: '1.5px solid #E0E0E8',
             borderRadius: 12,
-            padding: '14px 18px',
+            padding: '14px 12px',
             textAlign: 'center',
           }}
         >
@@ -231,7 +232,7 @@ export default function ResultPage() {
               {subject} · {examDate}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
             <button
               onClick={() => {
                 document.getElementById('feedback-section')?.scrollIntoView({ behavior: 'smooth' });

@@ -24,20 +24,21 @@ export default function ModeBanner({ mode }) {
       style={{
         borderLeft: `4px solid ${config.color}`,
         borderRadius: 12,
-        background: `${config.color}11`, // 7% opacity via hex is roughly 11
-        padding: '16px 20px',
+        background: `${config.color}11`,
+        padding: '14px 18px',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap: 12,
         marginBottom: 32,
       }}
     >
-      <span style={{ fontSize: 20 }}>{config.icon}</span>
+      <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>{config.icon}</span>
       <span
         style={{
           fontFamily: "'Sora', sans-serif",
-          fontSize: 15,
+          fontSize: 14,
           color: '#0A0A0F',
+          lineHeight: 1.5,
         }}
       >
         {config.text}

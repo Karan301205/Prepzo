@@ -148,6 +148,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border-radius: 6px;
 }
 
+/* ─── Global layout safety ───────────────────────────────────────────────── */
+
+/* Hard stop on all horizontal overflow */
+html { overflow-x: hidden; }
+
+/* Prevent images/SVGs from blowing out containers */
+img, svg, video, canvas { max-width: 100%; }
+
+/* Safe-area inset for notched iPhones (home-bar clearance) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .chat-input-area { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+}
+
 /* ─── Mobile responsive helpers ─────────────────────────────────────────── */
 
 /* Prevent horizontal overflow on all pages */

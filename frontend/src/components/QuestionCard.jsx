@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PriorityBadge from './PriorityBadge';
+import { useViewport } from '../hooks/useViewport';
 
 function TypeBadge({ type }) {
   const configs = {
@@ -20,6 +21,7 @@ function TypeBadge({ type }) {
         padding: '3px 10px',
         fontFamily: "'DM Mono', monospace",
         fontSize: 11,
+        whiteSpace: 'nowrap',
       }}
     >
       {config.label}
@@ -28,27 +30,16 @@ function TypeBadge({ type }) {
 }
 
 function DifficultyTag({ difficulty }) {
-  const colors = {
-    easy: '#0D9E6E',
-    medium: '#D4910A',
-    hard: '#E8341C',
-  };
-  const icons = {
-    easy: '🟢',
-    medium: '🟠',
-    hard: '🔴',
-  };
-  const labels = {
-    easy: 'Easy',
-    medium: 'Medium',
-    hard: 'Hard',
-  };
+  const colors = { easy: '#0D9E6E', medium: '#D4910A', hard: '#E8341C' };
+  const icons  = { easy: '🟢', medium: '🟠', hard: '🔴' };
+  const labels = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
   return (
     <span
       style={{
         fontFamily: "'DM Mono', monospace",
         fontSize: 12,
         color: colors[difficulty] || colors.medium,
+        whiteSpace: 'nowrap',
       }}
     >
       {icons[difficulty] || '🟠'} {labels[difficulty] || 'Medium'}
@@ -58,6 +49,7 @@ function DifficultyTag({ difficulty }) {
 
 export default function QuestionCard({ question, index }) {
   const [showSolution, setShowSolution] = useState(false);
+  const { isMobile } = useViewport();
 
   return (
     <motion.div
@@ -68,7 +60,7 @@ export default function QuestionCard({ question, index }) {
         background: '#FFFFFF',
         border: '1.5px solid #E0E0E8',
         borderRadius: 16,
-        padding: '24px 28px',
+        padding: isMobile ? '18px 16px' : '24px 28px',
         marginBottom: 16,
         transition: 'box-shadow 0.2s, border-color 0.2s',
       }}
@@ -81,14 +73,13 @@ export default function QuestionCard({ question, index }) {
         e.currentTarget.style.borderColor = '#E0E0E8';
       }}
     >
-      {/* Row 1: Badges + Topic */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      {/* Row 1: Badges */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <PriorityBadge priority={question.priority} />
         <TypeBadge type={question.type} />
         <DifficultyTag difficulty={question.difficulty} />
         <span
           style={{
-            marginLeft: 'auto',
             fontFamily: "'DM Mono', monospace",
             fontSize: 11,
             color: '#6B6B80',
@@ -96,7 +87,12 @@ export default function QuestionCard({ question, index }) {
             padding: '3px 10px',
             borderRadius: 999,
             border: '1px solid #E0E0E8',
+            maxWidth: isMobile ? '100%' : 'auto',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}
+          title={question.topic}
         >
           📌 {question.topic}
         </span>
@@ -107,10 +103,11 @@ export default function QuestionCard({ question, index }) {
         style={{
           fontFamily: "'Sora', sans-serif",
           fontWeight: 600,
-          fontSize: 15,
+          fontSize: isMobile ? 14 : 15,
           color: '#0A0A0F',
           lineHeight: 1.6,
           margin: '14px 0 16px',
+          wordBreak: 'break-word',
         }}
       >
         Q{index + 1}. {question.question}
@@ -172,12 +169,13 @@ export default function QuestionCard({ question, index }) {
                   background: '#F8F8FF',
                   border: '1px solid #E0E0E8',
                   borderRadius: 10,
-                  padding: '16px 18px',
+                  padding: isMobile ? '12px 14px' : '16px 18px',
                   fontFamily: "'Sora', sans-serif",
-                  fontSize: 14,
+                  fontSize: isMobile ? 13 : 14,
                   color: '#3A3A5A',
                   lineHeight: 1.7,
                   whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
                 }}
               >
                 {question.solution}

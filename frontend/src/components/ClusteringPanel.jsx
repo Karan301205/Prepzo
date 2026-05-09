@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion';
+import { useViewport } from '../hooks/useViewport';
 
 export default function ClusteringPanel({ clustering, onAddTopic }) {
+  const { isMobile } = useViewport();
+
   if (!clustering || !clustering.clusters || clustering.clusters.length === 0) return null;
 
   return (
@@ -9,7 +12,7 @@ export default function ClusteringPanel({ clustering, onAddTopic }) {
         background: '#FFFFFF',
         border: '1.5px solid #E0E0E8',
         borderRadius: 16,
-        padding: '24px 28px',
+        padding: isMobile ? '18px 16px' : '24px 28px',
         marginBottom: 24,
       }}
     >
@@ -32,7 +35,7 @@ export default function ClusteringPanel({ clustering, onAddTopic }) {
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))', gap: 12 }}>
         {clustering.clusters.map((cluster, i) => (
           <motion.div
             key={i}
@@ -63,10 +66,12 @@ export default function ClusteringPanel({ clustering, onAddTopic }) {
                   fontWeight: 600,
                   fontSize: 14,
                   color: '#0A0A0F',
-                  maxWidth: '70%',
+                  flex: 1,
+                  minWidth: 0,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
+                  marginRight: 8,
                 }}
                 title={cluster.label}
               >

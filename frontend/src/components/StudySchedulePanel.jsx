@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useViewport } from '../hooks/useViewport';
 
 const actionConfig = {
   learn: { icon: '📖', color: '#6C63FF', bg: '#EEEDFF', label: 'Learn' },
@@ -13,7 +14,7 @@ const priorityDot = {
   low: '⚪',
 };
 
-function DayCard({ day, index }) {
+function DayCard({ day, index, isMobile }) {
   const [expanded, setExpanded] = useState(index < 3);
   const learnCount = day.topics.filter((t) => t.action === 'learn').length;
   const reviewCount = day.topics.filter((t) => t.action === 'review').length;
@@ -49,14 +50,15 @@ function DayCard({ day, index }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '14px 20px',
+          padding: isMobile ? '12px 14px' : '14px 20px',
           background: 'none',
           border: 'none',
           cursor: 'pointer',
           fontFamily: "'Sora', sans-serif",
+          gap: 8,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, minWidth: 0, flex: 1 }}>
           <span
             style={{
               fontFamily: "'DM Mono', monospace",
@@ -66,15 +68,19 @@ function DayCard({ day, index }) {
               padding: '3px 10px',
               borderRadius: 6,
               fontWeight: 500,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
             {day.label}
           </span>
-          <span style={{ fontSize: 12, color: '#6B6B80', fontFamily: "'DM Mono', monospace" }}>
-            {day.date}
-          </span>
+          {!isMobile && (
+            <span style={{ fontSize: 12, color: '#6B6B80', fontFamily: "'DM Mono', monospace", whiteSpace: 'nowrap' }}>
+              {day.date}
+            </span>
+          )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 10, flexShrink: 0 }}>
           {learnCount > 0 && (
             <span style={{ fontSize: 11, color: '#6C63FF', fontFamily: "'DM Mono', monospace" }}>
               📖{learnCount}
@@ -93,7 +99,11 @@ function DayCard({ day, index }) {
           <span style={{ fontSize: 11, color: '#6B6B80', fontFamily: "'DM Mono', monospace" }}>
             {day.totalMinutes}min
           </span>
-          <span style={{ fontSize: 14, color: '#6B6B80', transition: 'transform 0.2s', transform: expanded ? 'rotate(180deg)' : 'rotate(0)' }}>
+          <span style={{
+            fontSize: 14, color: '#6B6B80',
+            transition: 'transform 0.2s',
+            transform: expanded ? 'rotate(180deg)' : 'rotate(0)',
+          }}>
             ▾
           </span>
         </div>
@@ -108,7 +118,7 @@ function DayCard({ day, index }) {
             exit={{ height: 0, opacity: 0 }}
             style={{ overflow: 'hidden' }}
           >
-            <div style={{ padding: '0 20px 16px', borderTop: '1px solid #F0F0F5' }}>
+            <div style={{ padding: isMobile ? '0 14px 14px' : '0 20px 16px', borderTop: '1px solid #F0F0F5' }}>
               {day.topics.map((topic, ti) => {
                 const cfg = actionConfig[topic.action] || actionConfig.learn;
                 return (
@@ -116,19 +126,28 @@ function DayCard({ day, index }) {
                     key={ti}
                     style={{
                       display: 'flex',
-                      alignItems: 'center',
+                      alignItems: 'flex-start',
                       justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 6,
                       padding: '10px 0',
                       borderBottom: ti < day.topics.length - 1 ? '1px solid #F8F8FF' : 'none',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 14 }}>{priorityDot[topic.priority] || '⚪'}</span>
-                      <span style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#0A0A0F', fontWeight: 500 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                      <span style={{ fontSize: 14, flexShrink: 0 }}>{priorityDot[topic.priority] || '⚪'}</span>
+                      <span style={{
+                        fontFamily: "'Sora', sans-serif",
+                        fontSize: isMobile ? 13 : 14,
+                        color: '#0A0A0F',
+                        fontWeight: 500,
+                        minWidth: 0,
+                        wordBreak: 'break-word',
+                      }}>
                         {topic.name}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                       <span
                         style={{
                           fontSize: 11,
@@ -138,11 +157,12 @@ function DayCard({ day, index }) {
                           borderRadius: 999,
                           fontFamily: "'DM Mono', monospace",
                           fontWeight: 500,
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         {cfg.icon} {cfg.label}
                       </span>
-                      <span style={{ fontSize: 11, color: '#6B6B80', fontFamily: "'DM Mono', monospace" }}>
+                      <span style={{ fontSize: 11, color: '#6B6B80', fontFamily: "'DM Mono', monospace", whiteSpace: 'nowrap' }}>
                         {topic.duration_minutes}min
                       </span>
                     </div>
@@ -173,6 +193,8 @@ function DayCard({ day, index }) {
 }
 
 export default function StudySchedulePanel({ schedule }) {
+  const { isMobile } = useViewport();
+
   if (!schedule || schedule.length === 0) return null;
 
   const totalDays = schedule.length;
@@ -184,11 +206,19 @@ export default function StudySchedulePanel({ schedule }) {
         background: '#FFFFFF',
         border: '1.5px solid #E0E0E8',
         borderRadius: 16,
-        padding: '24px 28px',
+        padding: isMobile ? '18px 16px' : '24px 28px',
         marginBottom: 40,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      {/* Panel header — stacks on mobile */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'flex-start' : 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+        marginBottom: 20,
+      }}>
         <div>
           <span
             style={{
@@ -207,7 +237,7 @@ export default function StudySchedulePanel({ schedule }) {
             Scientifically optimized for maximum retention
           </span>
         </div>
-        <div style={{ display: 'flex', gap: 16 }}>
+        <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
           <div style={{ textAlign: 'center' }}>
             <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 22, color: '#6C63FF', display: 'block' }}>
               {totalDays}
@@ -244,7 +274,7 @@ export default function StudySchedulePanel({ schedule }) {
 
       {/* Day Cards */}
       {schedule.map((day, i) => (
-        <DayCard key={day.day} day={day} index={i} />
+        <DayCard key={day.day} day={day} index={i} isMobile={isMobile} />
       ))}
     </div>
   );
