@@ -10,6 +10,8 @@ import { generatePlan, uploadPdf } from '../services/api';
 import { usePostHog } from '@posthog/react';
 import { track } from '../utils/analytics';
 import { useViewport } from '../hooks/useViewport';
+import { useUser } from '@clerk/react';
+import { savePlan } from '../services/supabase';
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -41,6 +43,7 @@ export default function InputPage() {
   const posthog = usePostHog();
   const navigate = useNavigate();
   const { isMobile } = useViewport();
+  const { user } = useUser();
   const [subject, setSubject] = useState('');
   const [examDate, setExamDate] = useState('');
   const [currentTopic, setCurrentTopic] = useState('');
@@ -180,6 +183,10 @@ export default function InputPage() {
         topics.length,
         response.data.questions?.length || 0
       );
+      // Save to Supabase in background (don't await — don't block navigation)
+      if (user?.id) {
+        savePlan(user.id, subject, examDate, response.data).catch(console.error);
+      }
       navigate('/result', { state: { plan: response.data, subject, examDate } });
     } catch (err) {
       const msg = err.response?.data?.detail || 'Failed to generate plan. Please try again.';

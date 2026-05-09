@@ -2,24 +2,15 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-
-import posthog from 'posthog-js'
-import { PostHogErrorBoundary, PostHogProvider } from '@posthog/react'
+import { ClerkProvider } from '@clerk/react'
 import ErrorBoundary from './components/ErrorBoundary'
-
-posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_TOKEN, {
-  api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-  defaults: '2026-01-30',
-})
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ErrorBoundary>
-      <PostHogProvider client={posthog}>
-        <PostHogErrorBoundary>
-          <App />
-        </PostHogErrorBoundary>
-      </PostHogProvider>
-    </ErrorBoundary>
+    <ClerkProvider afterSignOutUrl="/">
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </ClerkProvider>
   </StrictMode>,
 )
