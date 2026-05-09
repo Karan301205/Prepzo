@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { usePostHog } from '@posthog/react';
 import { motion } from 'framer-motion';
+import { track } from '../utils/analytics';
 import Navbar from '../components/Navbar';
 import ModeBanner from '../components/ModeBanner';
 import FilterBar from '../components/FilterBar';
@@ -77,6 +79,7 @@ function QuestionStats({ questions }) {
 }
 
 export default function ResultPage() {
+  const posthog = usePostHog();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -97,6 +100,16 @@ export default function ResultPage() {
 
   useEffect(() => {
     if (!plan) navigate('/input', { replace: true });
+    if (plan) {
+      posthog?.capture('plan_viewed', {
+        subject,
+        plan_mode: plan.mode,
+        questions_count: plan.questions?.length || 0,
+        exam_date: examDate,
+      });
+      // mode is auto-determined by the backend; record which one the user received
+      track.modeSelected(plan.mode);
+    }
   }, []);
 
   const [filters, setFilters] = useState({
@@ -120,7 +133,37 @@ export default function ResultPage() {
   const modeColor = plan.mode === 'survival' ? '#E8341C' : plan.mode === 'balanced' ? '#D4910A' : '#0D9E6E';
 
   const handleOpenChat = () => {
+    track.chatbotOpened();
     navigate('/chat', { state: { plan, subject, examDate } });
+  };
+
+  const handleDownloadPlan = () => {
+    const payload = {
+      subject,
+      examDate,
+      mode: plan.mode,
+      strategy: plan.strategy,
+      focusTopics: plan.focusTopics,
+      questions: plan.questions,
+      generatedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `prepzo-plan-${subject.toLowerCase().replace(/\s+/g, '-')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    track.planDownloaded();
+  };
+
+  const handleFilterChange = (newFilters) => {
+    posthog?.capture('filter_applied', {
+      priority_filters: newFilters.priority,
+      difficulty_filters: newFilters.difficulty,
+      type_filters: newFilters.type,
+    });
+    setFilters(newFilters);
   };
 
   return (
@@ -147,28 +190,61 @@ export default function ResultPage() {
           paddingRight: 24,
         }}
       >
-        <div style={{ marginBottom: 32 }}>
-          <h1
+        <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+          <div>
+            <h1
+              style={{
+                fontFamily: "'Sora', sans-serif",
+                fontWeight: 600,
+                fontSize: 40,
+                color: '#0A0A0F',
+                letterSpacing: '-0.03em',
+                marginBottom: 8,
+              }}
+            >
+              Your <span style={{ color: modeColor, textTransform: 'capitalize' }}>{plan.mode}</span> Plan
+            </h1>
+            <p
+              style={{
+                fontFamily: "'DM Mono', monospace",
+                fontSize: 13,
+                color: '#6B6B80',
+              }}
+            >
+              {subject} · {examDate}
+            </p>
+          </div>
+          <button
+            onClick={handleDownloadPlan}
+            title="Download plan as JSON"
             style={{
+              flexShrink: 0,
+              marginTop: 6,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              background: '#FFFFFF',
+              border: '1.5px solid #E0E0E8',
+              borderRadius: 999,
+              padding: '8px 16px',
               fontFamily: "'Sora', sans-serif",
-              fontWeight: 600,
-              fontSize: 40,
-              color: '#0A0A0F',
-              letterSpacing: '-0.03em',
-              marginBottom: 8,
-            }}
-          >
-            Your <span style={{ color: modeColor, textTransform: 'capitalize' }}>{plan.mode}</span> Plan
-          </h1>
-          <p
-            style={{
-              fontFamily: "'DM Mono', monospace",
               fontSize: 13,
+              fontWeight: 500,
               color: '#6B6B80',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#6C63FF';
+              e.currentTarget.style.color = '#6C63FF';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#E0E0E8';
+              e.currentTarget.style.color = '#6B6B80';
             }}
           >
-            {subject} · {examDate}
-          </p>
+            ↓ Download
+          </button>
         </div>
 
         <ModeBanner mode={plan.mode} />
@@ -256,7 +332,7 @@ export default function ResultPage() {
         <TopicInsightsPanel topicInsights={plan.topicInsights} />
 
         {/* Filters */}
-        <FilterBar filters={filters} setFilters={setFilters} />
+        <FilterBar filters={filters} setFilters={handleFilterChange} />
 
         <div
           style={{

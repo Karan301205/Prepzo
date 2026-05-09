@@ -5,6 +5,8 @@ import FloatingOrbs from '../three/FloatingOrbs';
 import Navbar from '../components/Navbar';
 import TopicChip from '../components/TopicChip';
 import { generatePlan, uploadPdf } from '../services/api';
+import { usePostHog } from '@posthog/react';
+import { track } from '../utils/analytics';
 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
@@ -31,6 +33,7 @@ function calculateDaysRemaining(dateString) {
 }
 
 export default function InputPage() {
+  const posthog = usePostHog();
   const navigate = useNavigate();
   const [subject, setSubject] = useState('');
   const [examDate, setExamDate] = useState('');
@@ -71,8 +74,10 @@ export default function InputPage() {
   const daysRemaining = useMemo(() => calculateDaysRemaining(examDate), [examDate]);
 
   const handleAddTopic = () => {
-    if (currentTopic.trim() && !topics.includes(currentTopic.trim())) {
-      setTopics([...topics, currentTopic.trim()]);
+    const trimmed = currentTopic.trim();
+    if (trimmed && !topics.includes(trimmed)) {
+      setTopics([...topics, trimmed]);
+      track.topicChipSelected(trimmed);
       setCurrentTopic('');
     }
   };
@@ -125,8 +130,11 @@ export default function InputPage() {
       if (response.data.patternAnalysis) {
         setPatternAnalysis(response.data.patternAnalysis);
       }
+      track.pdfUploaded(subject, Math.round(file.size / 1024));
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to process PDF.');
+      const msg = err.response?.data?.detail || 'Failed to process PDF.';
+      setError(msg);
+      track.errorOccurred('pdf_upload', msg);
       setPdfName(null);
     } finally {
       setPdfLoading(false);
@@ -149,9 +157,17 @@ export default function InputPage() {
         pdfText,
       });
       localStorage.setItem('prepzo_last_result', JSON.stringify({ plan: response.data, subject, examDate }));
+      track.studyPlanGenerated(
+        subject,
+        response.data.mode,
+        topics.length,
+        response.data.questions?.length || 0
+      );
       navigate('/result', { state: { plan: response.data, subject, examDate } });
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to generate plan. Please try again.');
+      const msg = err.response?.data?.detail || 'Failed to generate plan. Please try again.';
+      setError(msg);
+      track.errorOccurred('plan_generation', msg);
       setLoading(false);
     }
   };
@@ -509,7 +525,14 @@ export default function InputPage() {
               </div>
             </div>
             <button
-              onClick={() => navigate('/insights', { state: { clustering, patternAnalysis, topics, subject, examDate, pdfName } })}
+              onClick={() => {
+                posthog?.capture('pdf_analysis_viewed', {
+                  subject,
+                  clusters_count: clustering?.clusters?.length || 0,
+                  patterns_found: patternAnalysis?.totalQuestionsAnalyzed || 0,
+                });
+                navigate('/insights', { state: { clustering, patternAnalysis, topics, subject, examDate, pdfName } });
+              }}
               style={{
                 background: '#EEEDFF',
                 color: '#6C63FF',

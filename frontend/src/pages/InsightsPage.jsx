@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
+import { track } from '../utils/analytics';
 import ClusteringPanel from '../components/ClusteringPanel';
 import PatternAnalysisPanel from '../components/PatternAnalysisPanel';
 
@@ -22,7 +23,7 @@ export default function InsightsPage() {
   const pdfName = location.state?.pdfName || 'your PDF';
 
   const handleAddTopic = (topic) => {
-    // Navigate back to input with the new topic added
+    track.topicChipSelected(topic);
     const updatedTopics = topics.includes(topic) ? topics : [...topics, topic];
     navigate('/input', {
       state: {

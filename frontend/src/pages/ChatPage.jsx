@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import ChatBubble from '../components/ChatBubble';
 import { chatWithBot } from '../services/api';
+import { track } from '../utils/analytics';
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -69,6 +70,8 @@ export default function ChatPage() {
     setInput('');
     setLoading(true);
 
+    track.chatbotMessageSent(textToSend.length);
+
     try {
       const response = await chatWithBot(
         newMessages,
@@ -79,11 +82,12 @@ export default function ChatPage() {
         plan.questions
       );
       setMessages([...newMessages, { role: 'assistant', content: response.data.reply, isNew: true }]);
-    } catch (err) {
+    } catch {
       setMessages([
         ...newMessages,
         { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
       ]);
+      track.errorOccurred('chat', 'Chat API request failed');
     } finally {
       setLoading(false);
     }
