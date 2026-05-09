@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import ChatBubble from '../components/ChatBubble';
 import { chatWithBot } from '../services/api';
 import { track } from '../utils/analytics';
+import { useViewport } from '../hooks/useViewport';
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -22,6 +23,7 @@ function ArrowRightIcon({ size = 16, color = '#FFFFFF' }) {
 
 export default function ChatPage() {
   const location = useLocation();
+  const { isMobile } = useViewport();
   const navigate = useNavigate();
 
   const getStoredData = () => {
@@ -79,7 +81,9 @@ export default function ChatPage() {
         examDate,
         plan.mode,
         plan.focusTopics,
-        plan.questions
+        plan.questions,
+        plan.studySchedule,
+        plan.topicInsights,
       );
       setMessages([...newMessages, { role: 'assistant', content: response.data.reply, isNew: true }]);
     } catch {
@@ -197,11 +201,12 @@ export default function ChatPage() {
         style={{
           background: '#FFFFFF',
           borderTop: '1px solid #E0E0E8',
-          padding: '16px 24px',
+          padding: isMobile ? '12px 16px' : '16px 24px',
         }}
       >
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
+          {/* chat-actions class lets CSS media query wrap buttons on small screens */}
+          <div className="chat-actions" style={{ display: 'flex', gap: 8, marginBottom: 12, overflowX: 'auto', paddingBottom: 4 }}>
             {['💡 Explain Q#1', '📚 More on this topic', '🔄 Simplify'].map((action) => (
               <button
                 key={action}

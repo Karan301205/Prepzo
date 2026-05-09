@@ -12,6 +12,7 @@ function Pill({ label, active, onClick, activeColor }) {
         borderRadius: 999,
         cursor: 'pointer',
         transition: 'all 0.2s ease',
+        whiteSpace: 'nowrap',
       }}
     >
       {label}
@@ -35,8 +36,9 @@ export default function FilterBar({ filters, setFilters }) {
 
   return (
     <div style={{ marginBottom: 32 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#6B6B80', letterSpacing: '0.08em', width: 80 }}>PRIORITY</span>
+      {/* Each filter row uses .filter-row so the CSS media query can stack it on mobile */}
+      <div className="filter-row" style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+        <span className="filter-label" style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#6B6B80', letterSpacing: '0.08em', width: 80, flexShrink: 0 }}>PRIORITY</span>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Pill label="All" active={isAll('priority')} onClick={() => toggleFilter('priority', 'all')} activeColor="#0A0A0F" />
           <Pill label="🔴 Must" active={filters.priority.includes('must')} onClick={() => toggleFilter('priority', 'must')} activeColor="#E8341C" />
@@ -45,8 +47,8 @@ export default function FilterBar({ filters, setFilters }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#6B6B80', letterSpacing: '0.08em', width: 80 }}>DIFFICULTY</span>
+      <div className="filter-row" style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+        <span className="filter-label" style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#6B6B80', letterSpacing: '0.08em', width: 80, flexShrink: 0 }}>DIFFICULTY</span>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Pill label="All" active={isAll('difficulty')} onClick={() => toggleFilter('difficulty', 'all')} activeColor="#0A0A0F" />
           <Pill label="Easy" active={filters.difficulty.includes('easy')} onClick={() => toggleFilter('difficulty', 'easy')} activeColor="#0D9E6E" />
@@ -55,8 +57,8 @@ export default function FilterBar({ filters, setFilters }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#6B6B80', letterSpacing: '0.08em', width: 80 }}>TYPE</span>
+      <div className="filter-row" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <span className="filter-label" style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#6B6B80', letterSpacing: '0.08em', width: 80, flexShrink: 0 }}>TYPE</span>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Pill label="All" active={isAll('type')} onClick={() => toggleFilter('type', 'all')} activeColor="#0A0A0F" />
           <Pill label="MCQ" active={filters.type.includes('MCQ')} onClick={() => toggleFilter('type', 'MCQ')} activeColor="#6C63FF" />

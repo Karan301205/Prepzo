@@ -4,9 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import FloatingOrbs from '../three/FloatingOrbs';
 import Navbar from '../components/Navbar';
 import TopicChip from '../components/TopicChip';
+import SkeletonInsights from '../components/SkeletonInsights';
+import ErrorState from '../components/ErrorState';
 import { generatePlan, uploadPdf } from '../services/api';
 import { usePostHog } from '@posthog/react';
 import { track } from '../utils/analytics';
+import { useViewport } from '../hooks/useViewport';
+
+const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10 MB
 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
@@ -35,6 +40,7 @@ function calculateDaysRemaining(dateString) {
 export default function InputPage() {
   const posthog = usePostHog();
   const navigate = useNavigate();
+  const { isMobile } = useViewport();
   const [subject, setSubject] = useState('');
   const [examDate, setExamDate] = useState('');
   const [currentTopic, setCurrentTopic] = useState('');
@@ -49,6 +55,8 @@ export default function InputPage() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [clustering, setClustering] = useState(null);
   const [patternAnalysis, setPatternAnalysis] = useState(null);
+  // set to handleGeneratePlan when plan generation fails so user can retry
+  const [planRetry, setPlanRetry] = useState(null);
 
   const location = useLocation();
 
@@ -109,7 +117,15 @@ export default function InputPage() {
 
   const processFile = async (file) => {
     if (file.type !== 'application/pdf') {
-      setError('Only PDF files are supported.');
+      const msg = 'Only PDF files are supported.';
+      setError(msg);
+      track.errorOccurred('pdf_upload', msg);
+      return;
+    }
+    if (file.size > MAX_PDF_SIZE) {
+      const msg = 'File too large. Please upload a PDF under 10 MB.';
+      setError(msg);
+      track.errorOccurred('pdf_upload', msg);
       return;
     }
     setPdfName(file.name);
@@ -148,6 +164,7 @@ export default function InputPage() {
 
     setLoading(true);
     setError('');
+    setPlanRetry(null);
 
     try {
       const response = await generatePlan({
@@ -168,6 +185,8 @@ export default function InputPage() {
       const msg = err.response?.data?.detail || 'Failed to generate plan. Please try again.';
       setError(msg);
       track.errorOccurred('plan_generation', msg);
+      // allow user to retry the same generation attempt
+      setPlanRetry(() => handleGeneratePlan);
       setLoading(false);
     }
   };
@@ -200,10 +219,10 @@ export default function InputPage() {
             style={{
               fontFamily: "'Sora', sans-serif",
               fontWeight: 700,
-              fontSize: 44,
+              fontSize: isMobile ? 30 : 44,
               color: '#0A0A0F',
-              letterSpacing: '-0.04em',
-              lineHeight: 1.05,
+              letterSpacing: isMobile ? '-0.02em' : '-0.04em',
+              lineHeight: 1.1,
               marginBottom: 12,
             }}
           >
@@ -220,22 +239,7 @@ export default function InputPage() {
           </p>
         </div>
 
-        {error && (
-          <div
-            style={{
-              background: '#FEF0EE',
-              border: '1px solid #E8341C',
-              borderRadius: 10,
-              padding: '12px 16px',
-              fontFamily: "'Sora', sans-serif",
-              fontSize: 14,
-              color: '#E8341C',
-              marginBottom: 24,
-            }}
-          >
-            {error}
-          </div>
-        )}
+        {error && <ErrorState message={error} onRetry={planRetry} />}
 
         <div style={{ marginBottom: 24 }}>
           <label
@@ -496,8 +500,11 @@ export default function InputPage() {
           </div>
         </div>
 
+        {/* Skeleton: ML panels loading during PDF upload */}
+        {pdfLoading && <SkeletonInsights />}
+
         {/* PDF Analysis Badge */}
-        {(clustering || patternAnalysis) && (
+        {!pdfLoading && (clustering || patternAnalysis) && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
