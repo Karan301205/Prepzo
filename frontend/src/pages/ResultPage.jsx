@@ -11,6 +11,7 @@ import TopicInsightsPanel from '../components/TopicInsightsPanel';
 import StudySchedulePanel from '../components/StudySchedulePanel';
 import FeedbackSection from '../components/FeedbackSection';
 import { useViewport } from '../hooks/useViewport';
+import { track } from '../utils/analytics';
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -102,6 +103,7 @@ export default function ResultPage() {
 
   useEffect(() => {
     if (!plan) navigate('/input', { replace: true });
+    else track.modeSelected(plan.mode);
   }, [navigate, plan]);
 
   const [filters, setFilters] = useState({
@@ -125,6 +127,7 @@ export default function ResultPage() {
   const modeColor = plan.mode === 'survival' ? '#E8341C' : plan.mode === 'balanced' ? '#D4910A' : '#0D9E6E';
 
   const handleOpenChat = () => {
+    track.chatbotOpened();
     navigate('/chat', { state: { plan, subject, examDate } });
   };
 
@@ -180,6 +183,7 @@ export default function ResultPage() {
       });
     }
 
+    track.planDownloaded();
     doc.save(`prepzo-plan-${subject.toLowerCase().replace(/\s+/g, '-')}.pdf`);
   };
 

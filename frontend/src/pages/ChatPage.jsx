@@ -6,6 +6,7 @@ import ChatBubble from '../components/ChatBubble';
 import { chatWithBot } from '../services/api';
 import { useViewport } from '../hooks/useViewport';
 import { useStudyPlanContext } from '../hooks/useStudyPlanContext';
+import { track } from '../utils/analytics';
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -75,10 +76,13 @@ export default function ChatPage() {
     setInput('');
     setLoading(true);
 
+    track.chatbotMessageSent(textToSend.length);
     try {
       const response = await chatWithBot(newMessages, chatContext);
       setMessages([...newMessages, { role: 'assistant', content: response.data.reply, isNew: true }]);
-    } catch {
+    } catch (err) {
+      const msg = err?.response?.data?.detail || 'chat error';
+      track.errorOccurred('chat', msg);
       setMessages([
         ...newMessages,
         { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
