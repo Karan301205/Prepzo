@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import { track } from '../utils/analytics';
+import { useViewport } from '../hooks/useViewport';
 import ClusteringPanel from '../components/ClusteringPanel';
 import PatternAnalysisPanel from '../components/PatternAnalysisPanel';
 
@@ -14,6 +15,7 @@ const pageVariants = {
 export default function InsightsPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isMobile } = useViewport();
 
   const clustering = location.state?.clustering || null;
   const patternAnalysis = location.state?.patternAnalysis || null;
@@ -118,7 +120,7 @@ export default function InsightsPage() {
             style={{
               fontFamily: "'Sora', sans-serif",
               fontWeight: 700,
-              fontSize: 40,
+              fontSize: isMobile ? 26 : 40,
               color: '#0A0A0F',
               letterSpacing: '-0.03em',
               lineHeight: 1.1,

@@ -145,6 +145,77 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background: linear-gradient(90deg, #F0EEFF 25%, #E0DDFF 50%, #F0EEFF 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ─── Mobile responsive helpers ─────────────────────────────────────────── */
+
+/* Prevent horizontal overflow on all pages */
+body { overflow-x: hidden; }
+
+/* Filter row — stack label above pills on narrow screens */
+@media (max-width: 540px) {
+  .filter-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+  .filter-label {
+    width: auto !important;
+  }
+}
+
+/* Chat quick-action buttons — allow wrap on narrow screens */
+@media (max-width: 480px) {
+  .chat-actions {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .chat-actions button {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+  }
+}
+
+/* Question card — tighter padding on mobile */
+@media (max-width: 540px) {
+  .question-card {
+    padding: 16px 18px !important;
+  }
+  .question-card-badge-row {
+    flex-wrap: wrap;
+  }
+}
+
+/* Study schedule panel — compact on mobile */
+@media (max-width: 540px) {
+  .schedule-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .schedule-stats {
+    flex-direction: row;
+    gap: 20px;
+  }
+}
+
+/* Pattern analysis — chip overflow */
+@media (max-width: 540px) {
+  .topic-correlation-list {
+    flex-direction: column !important;
+  }
+  .topic-correlation-list span {
+    font-size: 11px !important;
+  }
+}
+
+/* Page container safe padding on very small screens */
+@media (max-width: 380px) {
+  .page-content {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
 }
 
 /* Confidence bar fill animation */
