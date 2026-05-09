@@ -10,6 +10,7 @@ import QuestionCard from '../components/QuestionCard';
 import TopicInsightsPanel from '../components/TopicInsightsPanel';
 import StudySchedulePanel from '../components/StudySchedulePanel';
 import FeedbackSection from '../components/FeedbackSection';
+import FeedbackModal from '../components/FeedbackModal';
 import { useViewport } from '../hooks/useViewport';
 import { track } from '../utils/analytics';
 
@@ -112,6 +113,8 @@ export default function ResultPage() {
     difficulty: [],
     type: [],
   });
+
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const filteredQuestions = useMemo(() => {
     if (!plan?.questions) return [];
@@ -399,6 +402,32 @@ export default function ResultPage() {
             </div>
           )}
         </div>
+
+        {/* Feedback trigger */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32, marginBottom: 8 }}>
+          <button
+            onClick={() => setFeedbackOpen(true)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: 'none', border: '1.5px solid #E0E0E8',
+              borderRadius: 999, padding: '9px 20px',
+              fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#6B6B80',
+              cursor: 'pointer', transition: 'border-color 0.2s, color 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#6C63FF'; e.currentTarget.style.color = '#6C63FF'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#E0E0E8'; e.currentTarget.style.color = '#6B6B80'; }}
+          >
+            ⭐ Rate this plan
+          </button>
+        </div>
+
+        <FeedbackModal
+          isOpen={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          context="result"
+          planMode={plan?.mode}
+          subject={subject}
+        />
 
         {/* Chat CTA */}
         <div

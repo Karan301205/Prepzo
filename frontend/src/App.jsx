@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuth, useUser, RedirectToSignIn } from '@clerk/react';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import SplashScreen from './components/SplashScreen';
 
 import HomePage from './pages/HomePage';
 import InputPage from './pages/InputPage';
@@ -57,8 +58,20 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
+  // Show splash only once per browser session
+  const [showSplash, setShowSplash] = useState(() => {
+    return !sessionStorage.getItem('prepzo_splashed');
+  });
+
+  useEffect(() => {
+    if (showSplash) {
+      sessionStorage.setItem('prepzo_splashed', '1');
+    }
+  }, [showSplash]);
+
   return (
     <BrowserRouter>
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
       <AnimatedRoutes />
     </BrowserRouter>
   );

@@ -8,20 +8,26 @@ export const supabase = createClient(
 // Called on every sign-in — creates user row if new, updates last_seen if returning
 export async function upsertUser(clerkUser) {
   try {
-    const { error } = await supabase
+    // First try to insert
+    const { error: insertError } = await supabase
       .from('users')
-      .upsert(
-        {
-          clerk_user_id: clerkUser.id,
-          email: clerkUser.primaryEmailAddress?.emailAddress || '',
-          full_name: clerkUser.fullName || '',
-          last_seen_at: new Date().toISOString(),
-        },
-        { onConflict: 'clerk_user_id' }
-      );
-    if (error) console.error('Supabase upsertUser error:', error.message);
+      .insert({
+        clerk_user_id: clerkUser.id,
+        email: clerkUser.primaryEmailAddress?.emailAddress || '',
+        full_name: clerkUser.fullName || '',
+      });
+
+    // If duplicate (user exists), update last_seen_at instead
+    if (insertError && insertError.code === '23505') {
+      await supabase
+        .from('users')
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq('clerk_user_id', clerkUser.id);
+    } else if (insertError) {
+      console.error('upsertUser insert error:', insertError.message);
+    }
   } catch (e) {
-    console.error('Supabase upsertUser exception:', e);
+    console.error('upsertUser exception:', e);
   }
 }
 

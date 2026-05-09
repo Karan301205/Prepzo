@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import ChatBubble from '../components/ChatBubble';
+import FeedbackModal from '../components/FeedbackModal';
 import { chatWithBot } from '../services/api';
 import { useViewport } from '../hooks/useViewport';
 import { useStudyPlanContext } from '../hooks/useStudyPlanContext';
@@ -59,6 +60,7 @@ export default function ChatPage() {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -200,6 +202,14 @@ export default function ChatPage() {
             {plan.mode}
           </span>
         )}
+        <button onClick={() => setFeedbackOpen(true)} style={{
+          background: 'none', border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: 999, padding: '5px 14px',
+          fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#6B6B80',
+          cursor: 'pointer', letterSpacing: '0.04em',
+        }}>
+          ⭐ RATE CHAT
+        </button>
       </div>
 
       {/* Messages */}
@@ -340,6 +350,14 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+
+      <FeedbackModal
+        isOpen={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        context="chat"
+        planMode={plan?.mode}
+        subject={subject}
+      />
     </motion.div>
   );
 }

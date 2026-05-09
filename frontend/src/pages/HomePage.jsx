@@ -97,46 +97,68 @@ export default function HomePage(){
   return (
     <div style={{background:C.bg,overflowX:'hidden'}}>
       <style>{`
-        @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-        .mtrack{display:flex;width:max-content;animation:marquee 22s linear infinite}
-        .hero-grid{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:80px}
-        .hero-visual{display:flex}
-        .section-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-        .section-grid-6{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-        .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
-        .modes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-        .section-pad{padding:100px 80px}
-        .hero-pad{padding:0 80px}
-        .footer-row{flex-direction:row;padding:28px 80px}
-        .stat-divider{border-right:1px solid rgba(255,255,255,0.08)}
-        @media(max-width:1024px){
-          .hero-grid{grid-template-columns:1fr;gap:48px;text-align:center}
-          .hero-visual{justify-content:center}
-          .section-grid-3{grid-template-columns:repeat(2,1fr)}
-          .section-grid-6{grid-template-columns:repeat(2,1fr)}
-          .stats-grid{grid-template-columns:repeat(2,1fr);gap:32px}
-          .modes-grid{grid-template-columns:1fr;max-width:480px;margin:0 auto}
-          .section-pad{padding:80px 40px}
-          .hero-pad{padding:0 40px}
-          .hero-cta{justify-content:center!important}
-          .hero-marquee{margin:48px auto 0!important}
-          .eyebrow-row{justify-content:center}
-          .stat-divider{border-right:none}
-          .footer-row{padding:24px 40px}
-        }
-        @media(max-width:640px){
-          .hero-grid{gap:32px}
-          .hero-visual{display:none}
-          .section-grid-3{grid-template-columns:1fr}
-          .section-grid-6{grid-template-columns:1fr}
-          .stats-grid{grid-template-columns:repeat(2,1fr);gap:24px}
-          .modes-grid{grid-template-columns:1fr}
-          .section-pad{padding:64px 20px}
-          .hero-pad{padding:0 20px}
-          .footer-row{flex-direction:column;gap:16px;text-align:center;padding:24px 20px}
-          .stat-divider{border-right:none}
-        }
-      `}</style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  @keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+  .mtrack { display: flex; width: max-content; animation: marquee 22s linear infinite; }
+
+  /* ── BASE (desktop) ── */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 64px;
+  }
+  .hero-visual { display: flex; justify-content: flex-end; }
+  .hero-cta { justify-content: flex-start !important; }
+  .hero-marquee { margin-left: 0 !important; }
+  .section-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .section-grid-6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .modes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .section-pad { padding: 100px 80px; }
+  .hero-pad { padding: 0 80px; }
+  .footer-row { flex-direction: row; padding: 28px 80px; }
+  .stat-divider { border-right: 1px solid rgba(255,255,255,0.08); }
+  .hero-text-align { text-align: left; }
+  .hero-eyebrow { justify-content: flex-start; }
+
+  /* ── TABLET (641px – 1024px) ── */
+  @media (max-width: 1024px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+      text-align: center;
+    }
+    .hero-text-align { text-align: center; }
+    .hero-eyebrow { justify-content: center !important; }
+    .hero-visual { justify-content: center; }
+    .hero-cta { justify-content: center !important; flex-wrap: wrap; }
+    .hero-marquee { margin: 40px auto 0 !important; }
+    .section-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .section-grid-6 { grid-template-columns: repeat(2, 1fr); }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 40px; }
+    .stat-divider { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 40px; }
+    .modes-grid { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
+    .section-pad { padding: 80px 40px; }
+    .hero-pad { padding: 0 40px; }
+    .footer-row { flex-direction: column; gap: 12px; text-align: center; padding: 24px 40px; }
+  }
+
+  /* ── MOBILE (≤ 640px) ── */
+  @media (max-width: 640px) {
+    .hero-grid { gap: 32px; }
+    .hero-visual { display: none; }
+    .section-grid-3 { grid-template-columns: 1fr; }
+    .section-grid-6 { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 28px; }
+    .stat-divider { border-right: none; border-bottom: none; padding-bottom: 0; }
+    .modes-grid { grid-template-columns: 1fr; max-width: 100%; }
+    .section-pad { padding: 60px 20px; }
+    .hero-pad { padding: 0 20px; }
+    .footer-row { padding: 20px 20px; }
+  }
+`}</style>
 
       <Navbar/>
 
@@ -144,8 +166,8 @@ export default function HomePage(){
       <section style={{minHeight:'100vh',background:'linear-gradient(160deg,#EEEAFF 0%,#F5F5F5 45%,#F0EEFF 100%)',display:'flex',alignItems:'center',paddingTop:56}}>
         <div style={{maxWidth:1200,margin:'0 auto',width:'100%'}} className="hero-pad">
           <div className="hero-grid">
-            <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:0.6}}>
-              <div style={{display:'inline-flex',alignItems:'center',gap:8,background:C.accentSoft,border:'1px solid #C8C4FF',borderRadius:999,padding:'6px 16px',marginBottom:28}}>
+            <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:0.6}} className="hero-text-align">
+              <div style={{display:'flex',alignItems:'center',gap:8,background:C.accentSoft,border:'1px solid #C8C4FF',borderRadius:999,padding:'6px 16px',marginBottom:28}} className="hero-eyebrow">
                 <span style={{width:6,height:6,borderRadius:'50%',background:C.accent}}/>
                 <span style={{fontFamily:fontM,fontSize:11,color:'#4A44AA',letterSpacing:'0.07em'}}>AI-POWERED EXAM INTELLIGENCE</span>
               </div>
