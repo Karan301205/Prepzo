@@ -1,13 +1,11 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import FloatingOrbs from '../three/FloatingOrbs';
 import Navbar from '../components/Navbar';
 import TopicChip from '../components/TopicChip';
 import SkeletonInsights from '../components/SkeletonInsights';
 import ErrorState from '../components/ErrorState';
 import { generatePlan, uploadPdf } from '../services/api';
-import { track } from '../utils/analytics';
 import { useViewport } from '../hooks/useViewport';
 import { useUser } from '@clerk/react';
 import { savePlan } from '../services/supabase';
@@ -56,13 +54,13 @@ export default function InputPage() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [clustering, setClustering] = useState(null);
   const [patternAnalysis, setPatternAnalysis] = useState(null);
-  // set to handleGeneratePlan when plan generation fails so user can retry
   const [planRetry, setPlanRetry] = useState(null);
 
   const location = useLocation();
 
   useEffect(() => {
     if (location.state) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (location.state.addedTopics) setTopics(location.state.addedTopics);
       if (location.state.subject) setSubject(location.state.subject);
       if (location.state.examDate) setExamDate(location.state.examDate);
@@ -70,11 +68,8 @@ export default function InputPage() {
       if (location.state.patternAnalysis) setPatternAnalysis(location.state.patternAnalysis);
       if (location.state.pdfName) setPdfName(location.state.pdfName);
 
-      // Auto-generate if directed from InsightsPage
       if (location.state.autoGenerate) {
-        // Clear autoGenerate so it doesn't loop
         window.history.replaceState({}, document.title);
-        // Small timeout to allow state to settle
         setTimeout(() => document.getElementById('generateBtn')?.click(), 100);
       }
     }
@@ -86,7 +81,6 @@ export default function InputPage() {
     const trimmed = currentTopic.trim();
     if (trimmed && !topics.includes(trimmed)) {
       setTopics([...topics, trimmed]);
-      track.topicChipSelected(trimmed);
       setCurrentTopic('');
     }
   };
@@ -118,15 +112,11 @@ export default function InputPage() {
 
   const processFile = async (file) => {
     if (file.type !== 'application/pdf') {
-      const msg = 'Only PDF files are supported.';
-      setError(msg);
-      track.errorOccurred('pdf_upload', msg);
+      setError('Only PDF files are supported.');
       return;
     }
     if (file.size > MAX_PDF_SIZE) {
-      const msg = 'File too large. Please upload a PDF under 10 MB.';
-      setError(msg);
-      track.errorOccurred('pdf_upload', msg);
+      setError('File too large. Please upload a PDF under 10 MB.');
       return;
     }
     setPdfName(file.name);
@@ -139,19 +129,15 @@ export default function InputPage() {
       if (response.data.detectedTopics && response.data.detectedTopics.length > 0) {
         setTopics((prev) => [...new Set([...prev, ...response.data.detectedTopics])]);
       }
-      // ML Model 3: K-Means Clustering results
       if (response.data.clustering) {
         setClustering(response.data.clustering);
       }
-      // ML Model 5: Pattern Analysis results
       if (response.data.patternAnalysis) {
         setPatternAnalysis(response.data.patternAnalysis);
       }
-      track.pdfUploaded(subject, Math.round(file.size / 1024));
     } catch (err) {
       const msg = err.response?.data?.detail || 'Failed to process PDF.';
       setError(msg);
-      track.errorOccurred('pdf_upload', msg);
       setPdfName(null);
     } finally {
       setPdfLoading(false);
@@ -174,14 +160,10 @@ export default function InputPage() {
         topics,
         pdfText,
       });
-      localStorage.setItem('prepzo_last_result', JSON.stringify({ plan: response.data, subject, examDate, patternAnalysis }));
-      track.studyPlanGenerated(
-        subject,
-        response.data.mode,
-        topics.length,
-        response.data.questions?.length || 0
+      localStorage.setItem(
+        'prepzo_last_result',
+        JSON.stringify({ plan: response.data, subject, examDate, patternAnalysis })
       );
-      // Save to Supabase in background (don't await — don't block navigation)
       if (user?.id) {
         savePlan(user.id, subject, examDate, response.data).catch(console.error);
       }
@@ -189,8 +171,6 @@ export default function InputPage() {
     } catch (err) {
       const msg = err.response?.data?.detail || 'Failed to generate plan. Please try again.';
       setError(msg);
-      track.errorOccurred('plan_generation', msg);
-      // allow user to retry the same generation attempt
       setPlanRetry(() => handleGeneratePlan);
       setLoading(false);
     }
@@ -203,9 +183,9 @@ export default function InputPage() {
       animate="animate"
       exit="exit"
       transition={{ duration: 0.4 }}
+      style={{ background: '#F5F5F5', minHeight: '100vh' }}
     >
       <Navbar />
-      <FloatingOrbs />
 
       <div
         style={{
@@ -246,6 +226,7 @@ export default function InputPage() {
 
         {error && <ErrorState message={error} onRetry={planRetry} />}
 
+        {/* Subject */}
         <div style={{ marginBottom: 24 }}>
           <label
             style={{
@@ -276,6 +257,7 @@ export default function InputPage() {
               color: '#0A0A0F',
               outline: 'none',
               transition: 'all 0.2s ease',
+              boxSizing: 'border-box',
             }}
             onFocus={(e) => {
               e.target.style.borderColor = '#6C63FF';
@@ -288,6 +270,7 @@ export default function InputPage() {
           />
         </div>
 
+        {/* Exam Date */}
         <div style={{ marginBottom: 24 }}>
           <label
             style={{
@@ -318,6 +301,7 @@ export default function InputPage() {
               color: '#0A0A0F',
               outline: 'none',
               transition: 'all 0.2s ease',
+              boxSizing: 'border-box',
             }}
             onFocus={(e) => {
               e.target.style.borderColor = '#6C63FF';
@@ -328,7 +312,7 @@ export default function InputPage() {
               e.target.style.boxShadow = 'none';
             }}
           />
-          
+
           <AnimatePresence>
             {daysRemaining !== null && (
               <motion.div
@@ -356,6 +340,7 @@ export default function InputPage() {
           </AnimatePresence>
         </div>
 
+        {/* Topics */}
         <div style={{ marginBottom: 24 }}>
           <label
             style={{
@@ -413,14 +398,14 @@ export default function InputPage() {
                 cursor: 'pointer',
                 transition: 'background-color 0.2s ease',
               }}
-              onMouseEnter={(e) => (e.target.style.backgroundColor = '#5B54E6')}
-              onMouseLeave={(e) => (e.target.style.backgroundColor = '#6C63FF')}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#5B54E6')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#6C63FF')}
             >
               + Add
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             <AnimatePresence>
               {topics.map((topic, index) => (
                 <motion.div
@@ -437,6 +422,7 @@ export default function InputPage() {
           </div>
         </div>
 
+        {/* PDF Upload */}
         <div style={{ marginBottom: 32 }}>
           <label
             style={{
@@ -479,7 +465,11 @@ export default function InputPage() {
             />
             {pdfLoading ? (
               <div style={{ textAlign: 'center' }}>
-                <div className="spinner-dark" style={{ margin: '0 auto 12px' }} />
+                <div style={{
+                  width: 24, height: 24, border: '3px solid #E0E0E8',
+                  borderTopColor: '#6C63FF', borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite', margin: '0 auto 12px',
+                }} />
                 <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#6B6B80' }}>
                   Processing PDF...
                 </p>
@@ -493,7 +483,7 @@ export default function InputPage() {
               </div>
             ) : (
               <div style={{ textAlign: 'center' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ margin: '0 auto 12px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ margin: '0 auto 12px', display: 'block' }}>
                   <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#C8C4FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M14 2V8H20" stroke="#C8C4FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -505,7 +495,7 @@ export default function InputPage() {
           </div>
         </div>
 
-        {/* Skeleton: ML panels loading during PDF upload */}
+        {/* Skeleton while PDF loads */}
         {pdfLoading && <SkeletonInsights />}
 
         {/* PDF Analysis Badge */}
@@ -537,14 +527,7 @@ export default function InputPage() {
               </div>
             </div>
             <button
-              onClick={() => {
-                posthog?.capture('pdf_analysis_viewed', {
-                  subject,
-                  clusters_count: clustering?.clusters?.length || 0,
-                  patterns_found: patternAnalysis?.totalQuestionsAnalyzed || 0,
-                });
-                navigate('/insights', { state: { clustering, patternAnalysis, topics, subject, examDate, pdfName } });
-              }}
+              onClick={() => navigate('/insights', { state: { clustering, patternAnalysis, topics, subject, examDate, pdfName } })}
               style={{
                 background: '#EEEDFF',
                 color: '#6C63FF',
@@ -557,14 +540,15 @@ export default function InputPage() {
                 cursor: 'pointer',
                 transition: 'background 0.2s',
               }}
-              onMouseEnter={(e) => (e.target.style.background = '#DFDDFF')}
-              onMouseLeave={(e) => (e.target.style.background = '#EEEDFF')}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#DFDDFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#EEEDFF')}
             >
               View Full Analysis →
             </button>
           </motion.div>
         )}
 
+        {/* Generate Button */}
         <button
           id="generateBtn"
           onClick={handleGeneratePlan}
@@ -594,7 +578,12 @@ export default function InputPage() {
         >
           {loading ? (
             <>
-              <span className="spinner" /> Analyzing...
+              <div style={{
+                width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)',
+                borderTopColor: '#FFFFFF', borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+              }} />
+              Analyzing...
             </>
           ) : (
             <>
@@ -612,6 +601,10 @@ export default function InputPage() {
             </>
           )}
         </button>
+
+        <style>{`
+          @keyframes spin { to { transform: rotate(360deg); } }
+        `}</style>
       </div>
     </motion.div>
   );

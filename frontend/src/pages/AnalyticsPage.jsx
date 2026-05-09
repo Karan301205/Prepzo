@@ -64,8 +64,9 @@ function StatCard({ label, value, icon, color }) {
 
 function ModeBar({ mode, count, total, color }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  const emoji = mode === 'survival' ? '🔥' : mode === 'balanced' ? '⚡' : '🎯';
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div style={{ marginBottom: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
         <span
           style={{
@@ -76,7 +77,7 @@ function ModeBar({ mode, count, total, color }) {
             textTransform: 'capitalize',
           }}
         >
-          {mode === 'survival' ? '🔥' : mode === 'balanced' ? '⚡' : '🎯'} {mode}
+          {emoji} {mode}
         </span>
         <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: '#6B6B80' }}>
           {count} ({pct}%)
@@ -94,6 +95,38 @@ function ModeBar({ mode, count, total, color }) {
   );
 }
 
+function EmptyState() {
+  return (
+    <div style={{
+      textAlign: 'center',
+      padding: '48px 24px',
+      background: '#FFFFFF',
+      border: '1.5px solid #E0E0E8',
+      borderRadius: 16,
+    }}>
+      <span style={{ fontSize: 40, display: 'block', marginBottom: 16 }}>📊</span>
+      <p style={{
+        fontFamily: "'Sora', sans-serif",
+        fontSize: 16,
+        fontWeight: 600,
+        color: '#0A0A0F',
+        marginBottom: 8,
+      }}>
+        No data yet
+      </p>
+      <p style={{
+        fontFamily: "'Sora', sans-serif",
+        fontSize: 14,
+        color: '#6B6B80',
+        maxWidth: 320,
+        margin: '0 auto',
+      }}>
+        Generate a study plan first — analytics will appear here automatically.
+      </p>
+    </div>
+  );
+}
+
 export default function AnalyticsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -105,8 +138,9 @@ export default function AnalyticsPage() {
       try {
         const res = await api.get('/analytics');
         setData(res.data);
+      // eslint-disable-next-line no-unused-vars
       } catch (err) {
-        setError('Failed to load analytics data.');
+        setError('Failed to load analytics. Make sure the backend is running.');
       } finally {
         setLoading(false);
       }
@@ -123,6 +157,8 @@ export default function AnalyticsPage() {
   const topSubjectsList = data?.topSubjects
     ? Object.entries(data.topSubjects).sort((a, b) => b[1] - a[1])
     : [];
+
+  const hasData = data && data.totalPlansGenerated > 0;
 
   return (
     <motion.div
@@ -145,6 +181,7 @@ export default function AnalyticsPage() {
           paddingRight: 24,
         }}
       >
+        {/* Header */}
         <div style={{ marginBottom: 40 }}>
           <h1
             style={{
@@ -159,10 +196,11 @@ export default function AnalyticsPage() {
             Platform Analytics
           </h1>
           <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: '#6B6B80' }}>
-            Real-time usage statistics for Prepzo.ai
+            Session-based usage stats — resets when backend restarts
           </p>
         </div>
 
+        {/* Loading skeletons */}
         {loading && (
           <div>
             <div style={{ display: 'flex', gap: 16, marginBottom: 32, flexWrap: 'wrap' }}>
@@ -175,7 +213,8 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        {error && (
+        {/* Error */}
+        {error && !loading && (
           <div
             style={{
               background: '#FEF0EE',
@@ -192,7 +231,11 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        {data && !loading && (
+        {/* No data yet */}
+        {!loading && !error && !hasData && <EmptyState />}
+
+        {/* Data */}
+        {!loading && !error && hasData && (
           <>
             {/* Stat Cards */}
             <div style={{ display: 'flex', gap: 16, marginBottom: 32, flexWrap: 'wrap' }}>
@@ -253,12 +296,12 @@ export default function AnalyticsPage() {
               </span>
               {topSubjectsList.length === 0 ? (
                 <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#6B6B80' }}>
-                  No subjects tracked yet. Generate a plan to see data here.
+                  No subjects tracked yet.
                 </p>
               ) : (
-                topSubjectsList.map(([subject, count], i) => (
+                topSubjectsList.map(([subjectName, count], i) => (
                   <motion.div
-                    key={subject}
+                    key={subjectName}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.06 }}
@@ -271,7 +314,7 @@ export default function AnalyticsPage() {
                     }}
                   >
                     <span style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: '#0A0A0F' }}>
-                      {subject}
+                      {subjectName}
                     </span>
                     <span
                       style={{

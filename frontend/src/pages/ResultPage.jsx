@@ -1,10 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { usePostHog } from '@posthog/react';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { track } from '../utils/analytics';
 import Navbar from '../components/Navbar';
 import ModeBanner from '../components/ModeBanner';
 import FilterBar from '../components/FilterBar';
@@ -82,7 +80,6 @@ function QuestionStats({ questions }) {
 }
 
 export default function ResultPage() {
-  const posthog = usePostHog();
   const location = useLocation();
   const navigate = useNavigate();
   const { isMobile } = useViewport();
@@ -104,17 +101,7 @@ export default function ResultPage() {
 
   useEffect(() => {
     if (!plan) navigate('/input', { replace: true });
-    if (plan) {
-      posthog?.capture('plan_viewed', {
-        subject,
-        plan_mode: plan.mode,
-        questions_count: plan.questions?.length || 0,
-        exam_date: examDate,
-      });
-      // mode is auto-determined by the backend; record which one the user received
-      track.modeSelected(plan.mode);
-    }
-  }, []);
+  }, [navigate, plan]);
 
   const [filters, setFilters] = useState({
     priority: [],
@@ -137,30 +124,26 @@ export default function ResultPage() {
   const modeColor = plan.mode === 'survival' ? '#E8341C' : plan.mode === 'balanced' ? '#D4910A' : '#0D9E6E';
 
   const handleOpenChat = () => {
-    track.chatbotOpened();
     navigate('/chat', { state: { plan, subject, examDate } });
   };
 
   const handleDownloadPlan = () => {
     const doc = new jsPDF();
-    
-    // Title
+
     doc.setFontSize(22);
     doc.text(`Prepzo Plan: ${subject}`, 14, 20);
-    
+
     doc.setFontSize(12);
     doc.text(`Mode: ${plan.mode ? plan.mode.toUpperCase() : 'UNKNOWN'} | Exam Date: ${examDate}`, 14, 30);
-    
-    // Strategy
+
     doc.setFontSize(16);
     doc.text('Strategy', 14, 45);
     doc.setFontSize(11);
     const splitStrategy = doc.splitTextToSize(plan.strategy || '', 180);
     doc.text(splitStrategy, 14, 55);
-    
+
     let currentY = 55 + (splitStrategy.length * 5) + 10;
-    
-    // Focus Topics
+
     if (plan.focusTopics && plan.focusTopics.length > 0) {
       doc.setFontSize(16);
       doc.text('Focus Topics', 14, currentY);
@@ -171,18 +154,15 @@ export default function ResultPage() {
       doc.text(splitTopics, 14, currentY);
       currentY += (splitTopics.length * 5) + 10;
     }
-    
-    // Questions
+
     if (plan.questions && plan.questions.length > 0) {
-      const tableData = plan.questions.map((q, index) => {
-        return [
-          index + 1,
-          q.topic || '-',
-          q.question || '',
-          q.solution || ''
-        ];
-      });
-      
+      const tableData = plan.questions.map((q, index) => [
+        index + 1,
+        q.topic || '-',
+        q.question || '',
+        q.solution || '',
+      ]);
+
       autoTable(doc, {
         startY: currentY,
         head: [['#', 'Topic', 'Question', 'Solution']],
@@ -193,22 +173,16 @@ export default function ResultPage() {
           0: { cellWidth: 10 },
           1: { cellWidth: 30 },
           2: { cellWidth: 70 },
-          3: { cellWidth: 70 }
+          3: { cellWidth: 70 },
         },
-        styles: { fontSize: 9, overflow: 'linebreak' }
+        styles: { fontSize: 9, overflow: 'linebreak' },
       });
     }
-    
+
     doc.save(`prepzo-plan-${subject.toLowerCase().replace(/\s+/g, '-')}.pdf`);
-    track.planDownloaded();
   };
 
   const handleFilterChange = (newFilters) => {
-    posthog?.capture('filter_applied', {
-      priority_filters: newFilters.priority,
-      difficulty_filters: newFilters.difficulty,
-      type_filters: newFilters.type,
-    });
     setFilters(newFilters);
   };
 
@@ -219,10 +193,7 @@ export default function ResultPage() {
       animate="animate"
       exit="exit"
       transition={{ duration: 0.4 }}
-      style={{
-        background: '#F5F5F5',
-        minHeight: '100vh',
-      }}
+      style={{ background: '#F5F5F5', minHeight: '100vh' }}
     >
       <Navbar />
 
@@ -236,6 +207,7 @@ export default function ResultPage() {
           paddingRight: 24,
         }}
       >
+        {/* Header */}
         <div style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
           <div>
             <h1
@@ -250,13 +222,7 @@ export default function ResultPage() {
             >
               Your <span style={{ color: modeColor, textTransform: 'capitalize' }}>{plan.mode}</span> Plan
             </h1>
-            <p
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: 13,
-                color: '#6B6B80',
-              }}
-            >
+            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: '#6B6B80' }}>
               {subject} · {examDate}
             </p>
           </div>
@@ -319,14 +285,7 @@ export default function ResultPage() {
             >
               Strategy
             </span>
-            <p
-              style={{
-                fontFamily: "'Sora', sans-serif",
-                fontSize: 15,
-                color: '#0A0A0F',
-                lineHeight: 1.7,
-              }}
-            >
+            <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 15, color: '#0A0A0F', lineHeight: 1.7 }}>
               {plan.strategy}
             </p>
           </div>
@@ -368,13 +327,13 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* Question Stats */}
+        {/* Stats */}
         <QuestionStats questions={plan.questions} />
 
-        {/* SM-2 Spaced Repetition Study Schedule */}
+        {/* Study Schedule */}
         <StudySchedulePanel schedule={plan.studySchedule} />
 
-        {/* Topic Insights from ML */}
+        {/* Topic Insights */}
         <TopicInsightsPanel topicInsights={plan.topicInsights} />
 
         {/* Filters */}
@@ -393,6 +352,7 @@ export default function ResultPage() {
           Showing {filteredQuestions.length} of {plan.questions?.length || 0} questions
         </div>
 
+        {/* Question Cards */}
         <div>
           {filteredQuestions.map((q, i) => (
             <QuestionCard key={i} question={q} index={i} />
@@ -431,13 +391,7 @@ export default function ResultPage() {
             >
               Questions about your plan?
             </p>
-            <p
-              style={{
-                fontFamily: "'Sora', sans-serif",
-                fontSize: 14,
-                color: 'rgba(240,240,255,0.55)',
-              }}
-            >
+            <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: 'rgba(240,240,255,0.55)' }}>
               Ask Prepzo to explain, simplify, or go deeper.
             </p>
           </div>
