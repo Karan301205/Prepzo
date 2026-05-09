@@ -1,56 +1,77 @@
+// src/components/FeedbackModal.jsx
+// REPLACES both FeedbackSection.jsx and old FeedbackModal.jsx
+// Single popup modal — triggered by "Rate this plan" button
+// Stores directly in Supabase feedback table
+
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@clerk/react';
-import { supabase } from '../services/supabase';
+import { submitFeedback } from '../services/supabase';
 
 const C = {
-  bg: '#F5F5F5', surface: '#FFFFFF', dark: '#1A1626',
-  accent: '#6C63FF', accentSoft: '#EEEDFF',
-  border: '#E0E0E8', text: '#0A0A0F', muted: '#6B6B80',
+  bg: '#F5F5F5',
+  surface: '#FFFFFF',
+  accent: '#6C63FF',
+  accentSoft: '#EEEDFF',
+  border: '#E0E0E8',
+  text: '#0A0A0F',
+  muted: '#6B6B80',
 };
 const fontD = "'Sora', sans-serif";
 const fontM = "'DM Mono', monospace";
 
-const RATING_EMOJIS = ['😞', '😕', '😐', '😊', '🤩'];
-const RATING_LABELS = ['Poor', 'Below avg', 'Okay', 'Good', 'Excellent'];
+const EMOJIS =  ['😞', '😕', '😐', '😊', '🤩'];
+const LABELS =  ['Poor', 'Below avg', 'Okay', 'Good', 'Excellent'];
 
-export default function FeedbackModal({ isOpen, onClose, context = 'general', planMode = null, subject = null }) {
+export default function FeedbackModal({
+  isOpen,
+  onClose,
+  context = 'result',
+  planMode = null,
+  subject = null,
+}) {
   const { user } = useUser();
-  const [rating, setRating] = useState(null);
-  const [hoveredRating, setHoveredRating] = useState(null);
-  const [comment, setComment] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [rating, setRating]         = useState(null);   // 0–4 index
+  const [hovered, setHovered]       = useState(null);
+  const [comment, setComment]       = useState('');
+  const [loading, setLoading]       = useState(false);
+  const [submitted, setSubmitted]   = useState(false);
+  const [error, setError]           = useState('');
+
+  const displayRating = hovered !== null ? hovered : rating;
 
   async function handleSubmit() {
     if (rating === null) { setError('Please select a rating.'); return; }
     setLoading(true);
     setError('');
 
-    const { error: sbError } = await supabase
-      .from('feedback')
-      .insert({
-        clerk_user_id: user?.id || null,
-        user_email: user?.primaryEmailAddress?.emailAddress || null,
-        rating: rating + 1,           // store as 1–5
-        comment: comment.trim() || null,
-        context,                       // 'result' | 'chat' | 'general'
-        plan_mode: planMode,           // 'survival' | 'balanced' | 'full' | null
-        subject: subject || null,
-      });
+    const result = await submitFeedback({
+      clerkUserId: user?.id || null,
+      userEmail:   user?.primaryEmailAddress?.emailAddress || null,
+      rating:      rating + 1,   // convert 0-based index to 1–5
+      comment:     comment,
+      context,
+      planMode,
+      subject,
+    });
 
     setLoading(false);
-    if (sbError) {
-      setError('Failed to save. Please try again.');
-      console.error('Feedback error:', sbError.message);
-    } else {
+    if (result.success) {
       setSubmitted(true);
-      setTimeout(() => { onClose(); setSubmitted(false); setRating(null); setComment(''); }, 2000);
+      setTimeout(() => {
+        onClose();
+        // reset after close
+        setTimeout(() => { setSubmitted(false); setRating(null); setComment(''); }, 300);
+      }, 2000);
+    } else {
+      setError('Could not save. Please try again.');
     }
   }
 
-  const displayRating = hoveredRating !== null ? hoveredRating : rating;
+  function handleClose() {
+    onClose();
+    setTimeout(() => { setSubmitted(false); setRating(null); setComment(''); setError(''); }, 300);
+  }
 
   return (
     <AnimatePresence>
@@ -58,44 +79,48 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general', pl
         <>
           {/* Backdrop */}
           <motion.div
-            key="backdrop"
+            key="fb-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={handleClose}
             style={{
-              position: 'fixed', inset: 0, zIndex: 1000,
-              background: 'rgba(10,10,15,0.5)',
-              backdropFilter: 'blur(4px)',
+              position: 'fixed', inset: 0, zIndex: 2000,
+              background: 'rgba(10,10,15,0.55)',
+              backdropFilter: 'blur(6px)',
             }}
           />
 
-          {/* Modal */}
+          {/* Modal card */}
           <motion.div
-            key="modal"
-            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            key="fb-modal"
+            initial={{ opacity: 0, scale: 0.93, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 16 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
+            exit={{ opacity: 0, scale: 0.93, y: 20 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
             style={{
               position: 'fixed',
               top: '50%', left: '50%',
               transform: 'translate(-50%, -50%)',
-              zIndex: 1001,
+              zIndex: 2001,
               background: C.surface,
               border: `1.5px solid ${C.border}`,
               borderRadius: 24,
               padding: '36px 32px',
-              width: '90%',
-              maxWidth: 440,
-              boxShadow: '0 24px 80px rgba(0,0,0,0.18)',
+              width: '92%',
+              maxWidth: 420,
+              boxShadow: '0 32px 80px rgba(0,0,0,0.2)',
+              boxSizing: 'border-box',
             }}
           >
             {submitted ? (
-              /* Success state */
-              <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-                <h3 style={{ fontFamily: fontD, fontWeight: 700, fontSize: 22, color: C.text, letterSpacing: '-0.02em', marginBottom: 8 }}>
+              /* ── Success state ── */
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ fontSize: 52, marginBottom: 16 }}>🎉</div>
+                <h3 style={{
+                  fontFamily: fontD, fontWeight: 700, fontSize: 22,
+                  color: C.text, letterSpacing: '-0.02em', marginBottom: 8,
+                }}>
                   Thank you!
                 </h3>
                 <p style={{ fontFamily: fontD, fontSize: 14, color: C.muted }}>
@@ -103,44 +128,60 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general', pl
                 </p>
               </div>
             ) : (
+              /* ── Form state ── */
               <>
-                {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                {/* Header row */}
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between',
+                  alignItems: 'flex-start', marginBottom: 24,
+                }}>
                   <div>
-                    <h3 style={{ fontFamily: fontD, fontWeight: 700, fontSize: 20, color: C.text, letterSpacing: '-0.02em', marginBottom: 4 }}>
+                    <h3 style={{
+                      fontFamily: fontD, fontWeight: 700, fontSize: 20,
+                      color: C.text, letterSpacing: '-0.02em', marginBottom: 4,
+                    }}>
                       How was your experience?
                     </h3>
                     <p style={{ fontFamily: fontD, fontSize: 13, color: C.muted }}>
-                      {context === 'result' ? 'Rate your study plan' : context === 'chat' ? 'Rate the AI chat' : 'Rate Prepzo overall'}
+                      {context === 'result' ? 'Rate your study plan'
+                        : context === 'chat' ? 'Rate the AI chat'
+                        : 'Rate Prepzo overall'}
                     </p>
                   </div>
-                  <button onClick={onClose} style={{
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    color: C.muted, fontSize: 20, lineHeight: 1, padding: 4,
-                  }}>×</button>
+                  <button
+                    onClick={handleClose}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: C.muted, fontSize: 22, lineHeight: 1, padding: 4,
+                      flexShrink: 0,
+                    }}
+                  >
+                    ×
+                  </button>
                 </div>
 
-                {/* Emoji rating */}
+                {/* Emoji rating row */}
                 <div style={{ marginBottom: 24 }}>
-                  <p style={{ fontFamily: fontM, fontSize: 11, color: C.muted, letterSpacing: '0.08em', marginBottom: 12 }}>
-                    YOUR RATING
+                  <p style={{
+                    fontFamily: fontM, fontSize: 11, color: C.muted,
+                    letterSpacing: '0.08em', marginBottom: 14, textTransform: 'uppercase',
+                  }}>
+                    Your Rating
                   </p>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-                    {RATING_EMOJIS.map((emoji, i) => (
+                    {EMOJIS.map((emoji, i) => (
                       <button
                         key={i}
                         onClick={() => setRating(i)}
-                        onMouseEnter={() => setHoveredRating(i)}
-                        onMouseLeave={() => setHoveredRating(null)}
+                        onMouseEnter={() => setHovered(i)}
+                        onMouseLeave={() => setHovered(null)}
                         style={{
-                          width: 52, height: 52,
-                          borderRadius: 14,
+                          width: 52, height: 52, borderRadius: 14,
                           border: `1.5px solid ${rating === i ? C.accent : C.border}`,
                           background: rating === i ? C.accentSoft : C.bg,
-                          fontSize: 24,
-                          cursor: 'pointer',
+                          fontSize: 24, cursor: 'pointer',
                           transition: 'all 0.15s',
-                          transform: displayRating === i ? 'scale(1.15)' : 'scale(1)',
+                          transform: displayRating === i ? 'scale(1.18)' : 'scale(1)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}
                       >
@@ -148,21 +189,23 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general', pl
                       </button>
                     ))}
                   </div>
-                  {displayRating !== null && (
-                    <p style={{
-                      fontFamily: fontD, fontSize: 13, color: C.accent,
-                      textAlign: 'center', marginTop: 8,
-                      transition: 'opacity 0.15s',
-                    }}>
-                      {RATING_LABELS[displayRating]}
-                    </p>
-                  )}
+                  <p style={{
+                    fontFamily: fontD, fontSize: 13, color: C.accent,
+                    textAlign: 'center', marginTop: 10, minHeight: 20,
+                    transition: 'opacity 0.15s',
+                    opacity: displayRating !== null ? 1 : 0,
+                  }}>
+                    {displayRating !== null ? LABELS[displayRating] : ''}
+                  </p>
                 </div>
 
-                {/* Comment */}
+                {/* Comment textarea */}
                 <div style={{ marginBottom: 20 }}>
-                  <p style={{ fontFamily: fontM, fontSize: 11, color: C.muted, letterSpacing: '0.08em', marginBottom: 8 }}>
-                    COMMENTS (OPTIONAL)
+                  <p style={{
+                    fontFamily: fontM, fontSize: 11, color: C.muted,
+                    letterSpacing: '0.08em', marginBottom: 8, textTransform: 'uppercase',
+                  }}>
+                    Comments (Optional)
                   </p>
                   <textarea
                     value={comment}
@@ -171,36 +214,42 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general', pl
                     maxLength={500}
                     rows={3}
                     style={{
-                      width: '100%',
+                      width: '100%', boxSizing: 'border-box',
                       fontFamily: fontD, fontSize: 14, color: C.text,
                       background: C.bg,
                       border: `1.5px solid ${C.border}`,
                       borderRadius: 12, padding: '12px 14px',
                       resize: 'none', outline: 'none',
                       transition: 'border-color 0.2s',
-                      boxSizing: 'border-box',
                     }}
                     onFocus={e => e.target.style.borderColor = C.accent}
                     onBlur={e => e.target.style.borderColor = C.border}
                   />
-                  <p style={{ fontFamily: fontM, fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 4 }}>
+                  <p style={{
+                    fontFamily: fontM, fontSize: 11, color: C.muted,
+                    textAlign: 'right', marginTop: 4,
+                  }}>
                     {comment.length}/500
                   </p>
                 </div>
 
                 {/* Error */}
                 {error && (
-                  <p style={{ fontFamily: fontD, fontSize: 13, color: '#E8341C', marginBottom: 12 }}>{error}</p>
+                  <p style={{
+                    fontFamily: fontD, fontSize: 13, color: '#E8341C',
+                    marginBottom: 12,
+                  }}>
+                    {error}
+                  </p>
                 )}
 
-                {/* Submit */}
+                {/* Submit button */}
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
                   style={{
                     width: '100%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    gap: 10,
                     background: loading ? '#9995CC' : C.accent,
                     color: '#FFFFFF',
                     fontFamily: fontD, fontWeight: 600, fontSize: 15,

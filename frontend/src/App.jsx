@@ -12,7 +12,6 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import InsightsPage from './pages/InsightsPage';
 import { upsertUser } from './services/supabase';
 
-// Protects routes — redirects to Clerk sign-in if not authenticated
 function ProtectedRoute({ children }) {
   const { isSignedIn, isLoaded } = useAuth();
   if (!isLoaded) return (
@@ -31,7 +30,6 @@ function AnimatedRoutes() {
   const location = useLocation();
   const { user, isSignedIn } = useUser();
 
-  // Sync Clerk user to Supabase on every sign-in
   useEffect(() => {
     if (isSignedIn && user) {
       upsertUser(user);
@@ -41,16 +39,12 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Public */}
         <Route path="/" element={<HomePage />} />
-
-        {/* Protected — must be signed in */}
         <Route path="/input"     element={<ProtectedRoute><InputPage /></ProtectedRoute>} />
         <Route path="/result"    element={<ProtectedRoute><ResultPage /></ProtectedRoute>} />
         <Route path="/chat"      element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
         <Route path="/insights"  element={<ProtectedRoute><InsightsPage /></ProtectedRoute>} />
-
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
@@ -58,16 +52,9 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
-  // Show splash only once per browser session
-  const [showSplash, setShowSplash] = useState(() => {
-    return !sessionStorage.getItem('prepzo_splashed');
-  });
-
-  useEffect(() => {
-    if (showSplash) {
-      sessionStorage.setItem('prepzo_splashed', '1');
-    }
-  }, [showSplash]);
+  // FIX: Show splash on EVERY page load/reload (not just once per session)
+  // We use a random key so it always renders fresh on mount
+  const [showSplash, setShowSplash] = useState(true);
 
   return (
     <BrowserRouter>
