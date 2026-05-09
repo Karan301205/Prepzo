@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import ChatBubble from '../components/ChatBubble';
 import { chatWithBot } from '../services/api';
-import { track } from '../utils/analytics';
 import { useViewport } from '../hooks/useViewport';
 import { useStudyPlanContext } from '../hooks/useStudyPlanContext';
 
@@ -41,16 +40,13 @@ export default function ChatPage() {
   const plan = rawState?.plan || stored?.plan || null;
   const subject = rawState?.subject || stored?.subject || '';
   const examDate = rawState?.examDate || stored?.examDate || '';
-
-  // Pattern analysis is stored separately (comes from PDF upload, not plan generation)
   const patternAnalysis = stored?.patternAnalysis || null;
 
-  // Build the structured context object for the chatbot (memoised)
   const chatContext = useStudyPlanContext(plan, subject, examDate, patternAnalysis);
 
   useEffect(() => {
     if (!plan) navigate('/input', { replace: true });
-  }, []); // only on mount — don't re-run on every render
+  }, []);
 
   const [messages, setMessages] = useState([
     {
@@ -79,8 +75,6 @@ export default function ChatPage() {
     setInput('');
     setLoading(true);
 
-    track.chatbotMessageSent(textToSend.length);
-
     try {
       const response = await chatWithBot(newMessages, chatContext);
       setMessages([...newMessages, { role: 'assistant', content: response.data.reply, isNew: true }]);
@@ -89,7 +83,6 @@ export default function ChatPage() {
         ...newMessages,
         { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
       ]);
-      track.errorOccurred('chat', 'Chat API request failed');
     } finally {
       setLoading(false);
     }
@@ -117,12 +110,13 @@ export default function ChatPage() {
     >
       <Navbar />
 
+      {/* Chat header */}
       <div
         style={{
           background: '#FFFFFF',
           borderBottom: '1px solid #E0E0E8',
           padding: '16px 24px',
-          marginTop: 56, // below navbar
+          marginTop: 56,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -140,8 +134,8 @@ export default function ChatPage() {
               cursor: 'pointer',
               padding: 0,
             }}
-            onMouseEnter={(e) => (e.target.style.color = '#6C63FF')}
-            onMouseLeave={(e) => (e.target.style.color = '#6B6B80')}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#6C63FF')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#6B6B80')}
           >
             ← Back to Plan
           </button>
@@ -157,36 +151,40 @@ export default function ChatPage() {
             >
               Prepzo Chat
             </span>
-            <span
-              style={{
-                display: 'inline-block',
-                border: `1px solid ${modeColor}`,
-                color: modeColor,
-                borderRadius: 999,
-                padding: '2px 8px',
-                fontFamily: "'DM Mono', monospace",
-                fontSize: 10,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}
-            >
-              {plan?.mode}
-            </span>
+            {plan?.mode && (
+              <span
+                style={{
+                  display: 'inline-block',
+                  border: `1px solid ${modeColor}`,
+                  color: modeColor,
+                  borderRadius: 999,
+                  padding: '2px 8px',
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 10,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {plan.mode}
+              </span>
+            )}
           </div>
         </div>
       </div>
 
+      {/* Messages */}
       <div
         ref={scrollRef}
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '24px 24px',
+          padding: '24px',
           display: 'flex',
           flexDirection: 'column',
           maxWidth: 800,
           margin: '0 auto',
           width: '100%',
+          boxSizing: 'border-box',
         }}
       >
         {messages.map((msg, i) => (
@@ -195,6 +193,7 @@ export default function ChatPage() {
         {loading && <ChatBubble message={{ role: 'assistant', content: '', isTyping: true }} />}
       </div>
 
+      {/* Input area */}
       <div
         style={{
           background: '#FFFFFF',
@@ -203,8 +202,16 @@ export default function ChatPage() {
         }}
       >
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          {/* chat-actions class lets CSS media query wrap buttons on small screens */}
-          <div className="chat-actions" style={{ display: 'flex', gap: 8, marginBottom: 12, overflowX: 'auto', paddingBottom: 4 }}>
+          {/* Quick action chips */}
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              marginBottom: 12,
+              overflowX: 'auto',
+              paddingBottom: 4,
+            }}
+          >
             {['💡 Explain Q#1', '📚 More on this topic', '🔄 Simplify'].map((action) => (
               <button
                 key={action}
@@ -220,14 +227,15 @@ export default function ChatPage() {
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   transition: 'all 0.2s ease',
+                  flexShrink: 0,
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.borderColor = '#6C63FF';
-                  e.target.style.color = '#6C63FF';
+                  e.currentTarget.style.borderColor = '#6C63FF';
+                  e.currentTarget.style.color = '#6C63FF';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.borderColor = '#E0E0E8';
-                  e.target.style.color = '#6B6B80';
+                  e.currentTarget.style.borderColor = '#E0E0E8';
+                  e.currentTarget.style.color = '#6B6B80';
                 }}
               >
                 {action}
@@ -235,6 +243,7 @@ export default function ChatPage() {
             ))}
           </div>
 
+          {/* Text input + send */}
           <div style={{ display: 'flex', gap: 12 }}>
             <input
               type="text"
@@ -280,6 +289,7 @@ export default function ChatPage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
+                transition: 'opacity 0.2s',
               }}
             >
               Send
