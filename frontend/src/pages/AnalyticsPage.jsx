@@ -21,7 +21,8 @@ function StatCard({ label, value, icon, color }) {
         border: '1.5px solid #E0E0E8',
         borderRadius: 16,
         padding: '24px 28px',
-        flex: '1 1 200px',
+        flex: '1 1 160px',
+      minWidth: 0,
         transition: 'border-color 0.2s, box-shadow 0.2s',
       }}
       onMouseEnter={(e) => {

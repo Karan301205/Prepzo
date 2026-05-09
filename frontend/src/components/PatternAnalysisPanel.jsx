@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useViewport } from '../hooks/useViewport';
 
 const categoryColors = {
   'Implementation/Coding': { bg: '#F0FDF4', color: '#15803D' },
@@ -21,7 +22,7 @@ function CategoryBar({ category, percentage }) {
         <span style={{ fontFamily: "'Sora', sans-serif", fontSize: 13, color: '#0A0A0F' }}>
           {category}
         </span>
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: cfg.color }}>
+        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: cfg.color, flexShrink: 0, marginLeft: 8 }}>
           {percentage}%
         </span>
       </div>
@@ -37,7 +38,7 @@ function CategoryBar({ category, percentage }) {
   );
 }
 
-function PatternCard({ pattern, index }) {
+function PatternCard({ pattern, index, isMobile }) {
   const cfg = categoryColors[pattern.category] || categoryColors['General Theory'];
   return (
     <motion.div
@@ -48,11 +49,19 @@ function PatternCard({ pattern, index }) {
         background: '#FAFAFF',
         border: '1px solid #E0E0E8',
         borderRadius: 10,
-        padding: '14px 16px',
+        padding: isMobile ? '12px 14px' : '14px 16px',
         marginBottom: 10,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+      {/* Badge row — wraps on mobile */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginBottom: 8,
+      }}>
         <span
           style={{
             fontSize: 11,
@@ -62,12 +71,13 @@ function PatternCard({ pattern, index }) {
             borderRadius: 999,
             fontFamily: "'DM Mono', monospace",
             fontWeight: 500,
+            whiteSpace: 'nowrap',
           }}
         >
           {pattern.category}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#6B6B80' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: '#6B6B80', whiteSpace: 'nowrap' }}>
             Appeared {pattern.frequency}x
           </span>
           <span
@@ -76,13 +86,20 @@ function PatternCard({ pattern, index }) {
               fontSize: 11,
               color: '#6C63FF',
               fontWeight: 500,
+              whiteSpace: 'nowrap',
             }}
           >
             {Math.round(pattern.probability * 100)}% likely
           </span>
         </div>
       </div>
-      <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 13, color: '#0A0A0F', lineHeight: 1.5, margin: 0 }}>
+      <p style={{
+        fontFamily: "'Sora', sans-serif",
+        fontSize: isMobile ? 12 : 13,
+        color: '#0A0A0F',
+        lineHeight: 1.5,
+        margin: 0,
+      }}>
         {pattern.pattern}
       </p>
     </motion.div>
@@ -90,6 +107,8 @@ function PatternCard({ pattern, index }) {
 }
 
 export default function PatternAnalysisPanel({ analysis }) {
+  const { isMobile } = useViewport();
+
   if (!analysis || analysis.totalQuestionsAnalyzed === 0) return null;
 
   const { patterns, categoryBreakdown, topicCorrelation, totalQuestionsAnalyzed } = analysis;
@@ -102,12 +121,20 @@ export default function PatternAnalysisPanel({ analysis }) {
         background: '#FFFFFF',
         border: '1.5px solid #E0E0E8',
         borderRadius: 16,
-        padding: '24px 28px',
+        padding: isMobile ? '18px 16px' : '24px 28px',
         marginBottom: 24,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <div>
+      {/* Header — stacks on mobile */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'flex-start' : 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+        marginBottom: 20,
+      }}>
+        <div style={{ minWidth: 0 }}>
           <span
             style={{
               fontFamily: "'DM Mono', monospace",
@@ -133,6 +160,8 @@ export default function PatternAnalysisPanel({ analysis }) {
             background: '#EEEDFF',
             padding: '4px 12px',
             borderRadius: 999,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
           }}
         >
           {totalQuestionsAnalyzed} questions analyzed
@@ -190,14 +219,16 @@ export default function PatternAnalysisPanel({ analysis }) {
                     background: '#F8F8FF',
                     border: '1px solid #E0E0E8',
                     borderRadius: 999,
-                    padding: '5px 14px',
+                    padding: '5px 12px',
                     fontFamily: "'Sora', sans-serif",
-                    fontSize: 12,
+                    fontSize: isMobile ? 11 : 12,
+                    flexWrap: 'nowrap',
+                    maxWidth: '100%',
                   }}
                 >
-                  <strong style={{ color: '#0A0A0F' }}>{topic}</strong>
+                  <strong style={{ color: '#0A0A0F', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>{topic}</strong>
                   <span style={{ color: '#6B6B80' }}>→</span>
-                  <span style={{ color: cfg.color, fontFamily: "'DM Mono', monospace", fontSize: 11 }}>
+                  <span style={{ color: cfg.color, fontFamily: "'DM Mono', monospace", fontSize: 11, whiteSpace: 'nowrap' }}>
                     {data.most_common_type} ({data.frequency}x)
                   </span>
                 </span>
@@ -224,7 +255,7 @@ export default function PatternAnalysisPanel({ analysis }) {
             Most Repeated Patterns
           </span>
           {patterns.slice(0, 8).map((p, i) => (
-            <PatternCard key={i} pattern={p} index={i} />
+            <PatternCard key={i} pattern={p} index={i} isMobile={isMobile} />
           ))}
         </div>
       )}

@@ -53,12 +53,13 @@ export default function ChatBubble({ message }) {
           color: '#F0F0FF',
           borderRadius: '18px 18px 4px 18px',
           padding: '12px 18px',
-          maxWidth: '70%',
+          maxWidth: 'min(70%, 420px)',
           fontFamily: "'Sora', sans-serif",
           fontSize: 14,
           lineHeight: 1.6,
           marginBottom: 16,
           whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
         }}
       >
         {message.content}
@@ -113,7 +114,7 @@ export default function ChatBubble({ message }) {
       animate={{ opacity: 1, y: 0 }}
       style={{
         alignSelf: 'flex-start',
-        maxWidth: '80%',
+        maxWidth: 'min(80%, 560px)',
         marginBottom: 16,
       }}
     >
@@ -140,6 +141,7 @@ export default function ChatBubble({ message }) {
           fontSize: 14,
           lineHeight: 1.7,
           whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
         }}
       >
         {displayed}

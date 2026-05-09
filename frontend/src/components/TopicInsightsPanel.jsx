@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useViewport } from '../hooks/useViewport';
 
 const typeConfigs = {
   MCQ: { icon: '🔵', color: '#2563EB', bg: '#EEF6FF' },
@@ -30,6 +31,8 @@ function ConfidenceBar({ label, value, color }) {
 }
 
 export default function TopicInsightsPanel({ topicInsights }) {
+  const { isMobile } = useViewport();
+
   if (!topicInsights || Object.keys(topicInsights).length === 0) return null;
 
   const entries = Object.entries(topicInsights);
@@ -40,7 +43,7 @@ export default function TopicInsightsPanel({ topicInsights }) {
         background: '#FFFFFF',
         border: '1.5px solid #E0E0E8',
         borderRadius: 16,
-        padding: '24px 28px',
+        padding: isMobile ? '18px 16px' : '24px 28px',
         marginBottom: 40,
       }}
     >
@@ -58,7 +61,7 @@ export default function TopicInsightsPanel({ topicInsights }) {
         ML Topic Insights — Naive Bayes Predictions
       </span>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
         {entries.map(([topic, insight], i) => {
           const config = typeConfigs[insight.predicted_type] || typeConfigs.theory;
           return (
@@ -90,10 +93,12 @@ export default function TopicInsightsPanel({ topicInsights }) {
                     fontWeight: 600,
                     fontSize: 13,
                     color: '#0A0A0F',
-                    maxWidth: '60%',
+                    flex: 1,
+                    minWidth: 0,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
+                    marginRight: 8,
                   }}
                   title={topic}
                 >

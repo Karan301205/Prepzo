@@ -107,7 +107,7 @@ export default function HomePage(){
         .modes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
         .section-pad{padding:100px 80px}
         .hero-pad{padding:0 80px}
-        .footer-row{flex-direction:row}
+        .footer-row{flex-direction:row;padding:28px 80px}
         .stat-divider{border-right:1px solid rgba(255,255,255,0.08)}
         @media(max-width:1024px){
           .hero-grid{grid-template-columns:1fr;gap:48px;text-align:center}
@@ -122,6 +122,7 @@ export default function HomePage(){
           .hero-marquee{margin:48px auto 0!important}
           .eyebrow-row{justify-content:center}
           .stat-divider{border-right:none}
+          .footer-row{padding:24px 40px}
         }
         @media(max-width:640px){
           .hero-grid{gap:32px}
@@ -132,7 +133,7 @@ export default function HomePage(){
           .modes-grid{grid-template-columns:1fr}
           .section-pad{padding:64px 20px}
           .hero-pad{padding:0 20px}
-          .footer-row{flex-direction:column;gap:16px;text-align:center}
+          .footer-row{flex-direction:column;gap:16px;text-align:center;padding:24px 20px}
           .stat-divider{border-right:none}
         }
       `}</style>
@@ -307,7 +308,7 @@ export default function HomePage(){
       </section>
 
       {/* FOOTER */}
-      <footer className="footer-row" style={{background:C.darkest,borderTop:'1px solid rgba(255,255,255,0.06)',padding:'28px 80px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+      <footer className="footer-row" style={{background:C.darkest,borderTop:'1px solid rgba(255,255,255,0.06)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <span style={{fontFamily:fontD,fontWeight:700,fontSize:16,color:C.textInv,letterSpacing:'-0.03em'}}>Prepzo<span style={{color:C.accent}}>.ai</span></span>
         <span style={{fontFamily:fontM,fontSize:11,color:'rgba(240,240,255,0.22)',letterSpacing:'0.05em'}}>2026 · NST TEAM · BUILT WITH ❤️</span>
       </footer>

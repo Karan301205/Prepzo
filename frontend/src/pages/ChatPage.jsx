@@ -119,14 +119,16 @@ export default function ChatPage() {
         style={{
           background: '#FFFFFF',
           borderBottom: '1px solid #E0E0E8',
-          padding: '16px 24px',
+          padding: isMobile ? '12px 16px' : '16px 24px',
           marginTop: 56,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: 8,
+          minWidth: 0,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 24, minWidth: 0, flex: 1 }}>
           <button
             onClick={() => navigate('/result', { state: { plan, subject, examDate } })}
             style={{
@@ -137,25 +139,28 @@ export default function ChatPage() {
               color: '#6B6B80',
               cursor: 'pointer',
               padding: 0,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = '#6C63FF')}
             onMouseLeave={(e) => (e.currentTarget.style.color = '#6B6B80')}
           >
-            ← Back to Plan
+            ← {isMobile ? 'Back' : 'Back to Plan'}
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <span
               style={{
                 fontFamily: "'Sora', sans-serif",
                 fontWeight: 600,
-                fontSize: 18,
+                fontSize: isMobile ? 16 : 18,
                 color: '#0A0A0F',
                 letterSpacing: '-0.02em',
+                whiteSpace: 'nowrap',
               }}
             >
               Prepzo Chat
             </span>
-            {plan?.mode && (
+            {plan?.mode && !isMobile && (
               <span
                 style={{
                   display: 'inline-block',
@@ -167,6 +172,7 @@ export default function ChatPage() {
                   fontSize: 10,
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {plan.mode}
@@ -174,6 +180,26 @@ export default function ChatPage() {
             )}
           </div>
         </div>
+        {/* Mode badge on mobile — moved to right side */}
+        {plan?.mode && isMobile && (
+          <span
+            style={{
+              display: 'inline-block',
+              border: `1px solid ${modeColor}`,
+              color: modeColor,
+              borderRadius: 999,
+              padding: '2px 8px',
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 10,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            {plan.mode}
+          </span>
+        )}
       </div>
 
       {/* Messages */}
@@ -182,7 +208,7 @@ export default function ChatPage() {
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '24px',
+          padding: isMobile ? '16px' : '24px',
           display: 'flex',
           flexDirection: 'column',
           maxWidth: 800,
@@ -199,6 +225,7 @@ export default function ChatPage() {
 
       {/* Input area */}
       <div
+        className="chat-input-area"
         style={{
           background: '#FFFFFF',
           borderTop: '1px solid #E0E0E8',

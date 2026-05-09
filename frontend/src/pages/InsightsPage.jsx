@@ -199,21 +199,22 @@ export default function InsightsPage() {
         <PatternAnalysisPanel analysis={patternAnalysis} />
 
         {/* Bottom CTA */}
-        <div style={{ display: 'flex', gap: 12, marginTop: 32 }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 32, flexWrap: 'wrap' }}>
           <button
             onClick={() => navigate('/input')}
             style={{
-              flex: 1,
+              flex: '1 1 140px',
               height: 48,
               background: '#FFFFFF',
               color: '#0A0A0F',
               border: '1.5px solid #E0E0E8',
               borderRadius: 999,
               fontFamily: "'Sora', sans-serif",
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: 500,
               cursor: 'pointer',
               transition: 'border-color 0.2s',
+              whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#6C63FF')}
             onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E0E0E8')}
@@ -223,17 +224,18 @@ export default function InsightsPage() {
           <button
             onClick={() => navigate('/input', { state: { autoGenerate: true, subject, examDate, addedTopics: topics } })}
             style={{
-              flex: 1,
+              flex: '1 1 160px',
               height: 48,
               background: '#0A0A0F',
               color: '#FFFFFF',
               border: 'none',
               borderRadius: 999,
               fontFamily: "'Sora', sans-serif",
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: 500,
               cursor: 'pointer',
               transition: 'background 0.2s',
+              whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#1A1626')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#0A0A0F')}
